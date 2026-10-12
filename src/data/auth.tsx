@@ -11,6 +11,7 @@ export interface AuthContextType {
   session: Session | null;
   role: UserRole;
   roleStatus: RoleStatus;
+  isAdmin: boolean;
   loading: boolean;
   isLoading: boolean;
   isSessionExpired: boolean;
@@ -234,6 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         role,
         roleStatus,
+        isAdmin: role === 'admin',
         loading,
         isLoading: loading || roleStatus === 'checking',
         isSessionExpired,
@@ -256,3 +258,8 @@ export function useAuth(): AuthContextType {
   }
   return context;
 }
+
+export function useOptionalAuth(): AuthContextType | null {
+  return useContext(AuthContext) ?? null;
+}
+

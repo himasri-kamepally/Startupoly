@@ -18,6 +18,7 @@ describe('AdminLoginPage', () => {
     roleStatus: 'verified',
     loading: false,
     isLoading: false,
+    isAdmin: false,
     isSessionExpired: false,
     lastAdminEmail: '',
     promptReAuth: vi.fn(),

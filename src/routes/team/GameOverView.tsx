@@ -1,8 +1,9 @@
-import React from 'react';
-import { PixelCard, BigNumber } from '../../ui';
+import { Link, useInRouterContext } from 'react-router-dom';
+import { PixelCard, BigNumber, PixelButton } from '../../ui';
 import { PixelCoin } from '../../ui/pixel';
 import { formatINR } from '../../lib/format';
 import { TeamStateResponse } from '../../data/rpc';
+import { useOptionalAuth } from '../../data/auth';
 
 interface GameOverViewProps {
   state: TeamStateResponse;
@@ -10,6 +11,9 @@ interface GameOverViewProps {
 
 export const GameOverView: React.FC<GameOverViewProps> = ({ state }) => {
   const { team, businesses } = state;
+  const auth = useOptionalAuth();
+  const isAdmin = auth?.isAdmin ?? false;
+  const inRouter = useInRouterContext();
   const totalAssets = team.cash + team.cv;
 
   return (
@@ -63,13 +67,46 @@ export const GameOverView: React.FC<GameOverViewProps> = ({ state }) => {
           </span>
         </div>
 
-        <div className="bg-white border-2 border-[#102040] p-3 text-center">
+        <div className="bg-white border-2 border-[#102040] p-3 text-center mb-3">
           <span className="font-pixel text-[10px] text-[#64748B] block uppercase mb-1">
             PORTFOLIO SUMMARY
           </span>
           <span className="font-mono font-bold text-xs text-[#102040]">
             {businesses.length} of 3 Businesses Held at Match End
           </span>
+        </div>
+
+        {/* Back Navigation */}
+        <div className="flex flex-col gap-2 pt-1">
+          {isAdmin ? (
+            inRouter ? (
+              <Link to="/admin" className="w-full">
+                <PixelButton variant="primary" size="md" fullWidth>
+                  ◄ BACK TO ADMIN CONSOLE
+                </PixelButton>
+              </Link>
+            ) : (
+              <a href="/admin" className="w-full">
+                <PixelButton variant="primary" size="md" fullWidth>
+                  ◄ BACK TO ADMIN CONSOLE
+                </PixelButton>
+              </a>
+            )
+          ) : (
+            inRouter ? (
+              <Link to="/join" className="w-full">
+                <PixelButton variant="secondary" size="md" fullWidth>
+                  ◄ JOIN ANOTHER ROOM
+                </PixelButton>
+              </Link>
+            ) : (
+              <a href="/join" className="w-full">
+                <PixelButton variant="secondary" size="md" fullWidth>
+                  ◄ JOIN ANOTHER ROOM
+                </PixelButton>
+              </a>
+            )
+          )}
         </div>
       </PixelCard>
     </div>

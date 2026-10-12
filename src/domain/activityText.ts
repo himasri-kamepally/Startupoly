@@ -102,8 +102,14 @@ export function formatActivityEvent(
         parts.push(`${cvDelta >= 0 ? '+' : '−'}₹${Math.abs(cvDelta).toLocaleString('en-IN')} CV`);
       }
 
+      // If a descriptive rulebook note is provided, display it directly as the primary sentence
+      const sentence =
+        note && note.trim().length > 0
+          ? note
+          : `${teamName || 'Team'} adjustment: ${parts.join(', ') || 'No change'}`;
+
       return {
-        sentence: `${teamName || 'Team'} adjustment: ${parts.join(', ') || 'No change'}`,
+        sentence,
         teamName,
         teamColor,
         isPositive: cashDelta >= 0 && cvDelta >= 0,
@@ -116,9 +122,12 @@ export function formatActivityEvent(
 
     case 'BUSINESS_ADDED': {
       const applyPurchase = event.new?.apply_purchase !== false;
-      const sentence = applyPurchase
-        ? `${teamName || 'Team'} bought ${bizName}`
-        : `${teamName || 'Team'} added ${bizName} (manual)`;
+      const sentence =
+        note && note.trim().length > 0
+          ? note
+          : applyPurchase
+          ? `${teamName || 'Team'} bought ${bizName}`
+          : `${teamName || 'Team'} added ${bizName} (manual)`;
 
       return {
         sentence,

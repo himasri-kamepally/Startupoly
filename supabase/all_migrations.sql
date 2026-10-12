@@ -2795,9 +2795,6 @@ $$;
 REVOKE ALL ON FUNCTION public.admin_abort_game(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_abort_game(uuid, text) TO authenticated;
 
-
-
--- Migration 0014: Enforce one active phone claim per team
 -- Migration 0014: Enforce one active phone claim per team
 -- A team slot may be claimed by exactly one anonymous session at a time.
 -- Admin release remains the explicit recovery path for a lost phone/session.
@@ -2932,3 +2929,241 @@ REVOKE ALL ON FUNCTION public.join_team(text, int, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.join_team(text, int, text) TO anon, authenticated;
 
 COMMIT;
+
+-- ============================================================================
+-- Migration 0015: Add PAUSED status, Pause/Resume/End RPCs, and Explicit Lifecycle States
+-- ============================================================================
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type typ
+    JOIN pg_enum enm ON typ.oid = enm.enumtypid
+    WHERE typ.typname = 'room_status' AND enm.enumlabel = 'PAUSED'
+  ) THEN
+    ALTER TYPE public.room_status ADD VALUE 'PAUSED' AFTER 'ACTIVE';
+  END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.fn_check_room_status_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.status IS DISTINCT FROM NEW.status THEN
+    IF NOT (
+      (OLD.status = 'CREATED' AND NEW.status = 'LOBBY') OR
+      (OLD.status = 'LOBBY' AND NEW.status = 'ACTIVE') OR
+      (OLD.status = 'ACTIVE' AND NEW.status = 'PAUSED') OR
+      (OLD.status = 'PAUSED' AND NEW.status = 'ACTIVE') OR
+      (OLD.status = 'ACTIVE' AND NEW.status = 'TIME_EXPIRED') OR
+      (OLD.status = 'PAUSED' AND NEW.status = 'TIME_EXPIRED') OR
+      (OLD.status = 'ACTIVE' AND NEW.status = 'LOBBY') OR
+      (OLD.status = 'PAUSED' AND NEW.status = 'LOBBY') OR
+      (OLD.status = 'TIME_EXPIRED' AND NEW.status = 'FINALIZED')
+    ) THEN
+      RAISE EXCEPTION 'INVALID_TRANSITION';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.expire_if_due(p_room_id uuid)
+RETURNS public.room_status
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_status public.room_status;
+  v_ends_at timestamptz;
+  v_started_at timestamptz;
+BEGIN
+  SELECT status, ends_at, started_at INTO v_status, v_ends_at, v_started_at
+  FROM public.rooms
+  WHERE id = p_room_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    PERFORM public.raise_error('ROOM_NOT_FOUND', jsonb_build_object('room_id', p_room_id));
+  END IF;
+
+  IF v_status = 'ACTIVE' AND v_started_at IS NOT NULL AND v_ends_at IS NOT NULL AND public.app_now() >= v_ends_at THEN
+    UPDATE public.rooms
+    SET status = 'TIME_EXPIRED'
+    WHERE id = p_room_id;
+
+    INSERT INTO public.activity_events (
+      room_id,
+      type,
+      note,
+      created_at
+    ) VALUES (
+      p_room_id,
+      'TIME_EXPIRED',
+      'Gameplay window expired. Scores frozen.',
+      public.app_now()
+    );
+
+    v_status := 'TIME_EXPIRED';
+  END IF;
+
+  RETURN v_status;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_pause_game(room_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_room public.rooms%ROWTYPE;
+  v_remaining_seconds int;
+BEGIN
+  IF NOT public.is_admin() THEN
+    PERFORM public.raise_error('NOT_ADMIN');
+  END IF;
+
+  SELECT * INTO v_room
+  FROM public.rooms
+  WHERE id = room_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    PERFORM public.raise_error('ROOM_NOT_FOUND');
+  END IF;
+
+  IF v_room.status <> 'ACTIVE' THEN
+    PERFORM public.raise_error('INVALID_TRANSITION', jsonb_build_object('current_status', v_room.status));
+  END IF;
+
+  IF v_room.ends_at IS NOT NULL THEN
+    v_remaining_seconds := GREATEST(0, EXTRACT(EPOCH FROM (v_room.ends_at - public.app_now()))::int);
+  ELSE
+    v_remaining_seconds := v_room.duration_seconds;
+  END IF;
+
+  UPDATE public.rooms
+  SET status = 'PAUSED',
+      duration_seconds = v_remaining_seconds,
+      ends_at = NULL
+  WHERE id = room_id;
+
+  INSERT INTO public.activity_events (
+    room_id,
+    type,
+    note,
+    created_at
+  ) VALUES (
+    room_id,
+    'ADJUSTMENT',
+    'Match paused by administrator. Game clock frozen.',
+    public.app_now()
+  );
+
+  RETURN public.get_admin_snapshot(room_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_pause_game(uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.admin_resume_game(room_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_room public.rooms%ROWTYPE;
+BEGIN
+  IF NOT public.is_admin() THEN
+    PERFORM public.raise_error('NOT_ADMIN');
+  END IF;
+
+  SELECT * INTO v_room
+  FROM public.rooms
+  WHERE id = room_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    PERFORM public.raise_error('ROOM_NOT_FOUND');
+  END IF;
+
+  IF v_room.status <> 'PAUSED' THEN
+    PERFORM public.raise_error('INVALID_TRANSITION', jsonb_build_object('current_status', v_room.status));
+  END IF;
+
+  UPDATE public.rooms
+  SET status = 'ACTIVE',
+      ends_at = public.app_now() + (v_room.duration_seconds || ' seconds')::interval
+  WHERE id = room_id;
+
+  INSERT INTO public.activity_events (
+    room_id,
+    type,
+    note,
+    created_at
+  ) VALUES (
+    room_id,
+    'ADJUSTMENT',
+    'Match resumed by administrator. Game clock active.',
+    public.app_now()
+  );
+
+  RETURN public.get_admin_snapshot(room_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_resume_game(uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.admin_end_game(room_id uuid, note text DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_room public.rooms%ROWTYPE;
+BEGIN
+  IF NOT public.is_admin() THEN
+    PERFORM public.raise_error('NOT_ADMIN');
+  END IF;
+
+  SELECT * INTO v_room
+  FROM public.rooms
+  WHERE id = room_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    PERFORM public.raise_error('ROOM_NOT_FOUND');
+  END IF;
+
+  IF v_room.status NOT IN ('ACTIVE', 'PAUSED') THEN
+    PERFORM public.raise_error('INVALID_TRANSITION', jsonb_build_object('current_status', v_room.status));
+  END IF;
+
+  UPDATE public.rooms
+  SET status = 'TIME_EXPIRED',
+      ends_at = public.app_now()
+  WHERE id = room_id;
+
+  INSERT INTO public.activity_events (
+    room_id,
+    type,
+    note,
+    created_at
+  ) VALUES (
+    room_id,
+    'TIME_EXPIRED',
+    coalesce(nullif(trim(note), ''), 'Match concluded early by administrator. Scores frozen.'),
+    public.app_now()
+  );
+
+  RETURN public.get_admin_snapshot(room_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_end_game(uuid, text) TO authenticated;

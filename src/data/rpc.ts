@@ -66,7 +66,14 @@ export async function rpcJoinTeam(code: string, slot: number, pin: string) {
 
 export async function rpcGetMyState() {
   return callRpc<{
-    room: { status: string; started_at: string | null; ends_at: string | null; server_now: string };
+    room: {
+      status: string;
+      lifecycle_state?: string;
+      started_at: string | null;
+      ends_at: string | null;
+      duration_seconds?: number;
+      server_now: string;
+    };
     team: { slot: number; name: string; color: string; cash: number; cv: number; is_bankrupt: boolean };
     businesses: Array<{
       business_key: string;
@@ -107,6 +114,18 @@ export async function rpcAdminReleaseTeam(team_id: string) {
 
 export async function rpcAdminStartGame(room_id: string, force = false) {
   return callRpc<any>('admin_start_game', { room_id, force });
+}
+
+export async function rpcAdminPauseGame(room_id: string) {
+  return callRpc<any>('admin_pause_game', { room_id });
+}
+
+export async function rpcAdminResumeGame(room_id: string) {
+  return callRpc<any>('admin_resume_game', { room_id });
+}
+
+export async function rpcAdminEndGame(room_id: string, note?: string) {
+  return callRpc<any>('admin_end_game', { room_id, note });
 }
 
 export async function rpcAdminAbortGame(room_id: string, note: string) {
@@ -192,7 +211,8 @@ export interface AdminRoomSnapshot {
   room: {
     id: string;
     code: string;
-    status: 'CREATED' | 'LOBBY' | 'ACTIVE' | 'TIME_EXPIRED' | 'FINALIZED' | string;
+    status: 'CREATED' | 'LOBBY' | 'ACTIVE' | 'PAUSED' | 'TIME_EXPIRED' | 'FINALIZED' | string;
+    lifecycle_state?: 'not_started' | 'waiting' | 'running' | 'paused' | 'completed' | 'cancelled' | string;
     team_count: number;
     started_at: string | null;
     ends_at: string | null;

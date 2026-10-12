@@ -30,4 +30,7 @@ export * from './PlainsBackground';
 export * from './RoamingCharacter';
 export * from './SceneTransition';
 export * from './PixelMario';
+export * from './PixelGreenPlatform';
 export * from './StartupolyLogo';
+export * from './AdminPatrolCharacter';
+export * from './AdminSkyBackground';

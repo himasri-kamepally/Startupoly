@@ -73,18 +73,19 @@ export const CreateRoomView: React.FC = () => {
 
   return (
     <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
-      {/* Top Banner with Navigation */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Prominent Empty State Banner: No Active Match */}
+      <div className="bg-[#102040] text-white border-4 border-[#102040] p-4 shadow-[4px_4px_0px_#102040] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="font-pixel text-lg sm:text-xl text-[#102040] uppercase drop-shadow-[2px_2px_0px_#FFF]">
-            CREATE TOURNAMENT ROOM
-          </h1>
-          <p className="font-mono text-xs text-[#102040] font-semibold mt-1">
-            Configure 5 or 6 competing startup teams for the 50-minute physical board game
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2.5 h-2.5 bg-[#FFCC00] border border-white inline-block" />
+            <span className="font-pixel text-xs text-[#FFCC00]">NO ACTIVE MATCH IN PROGRESS</span>
+          </div>
+          <p className="font-mono text-xs text-[#CBD5E1]">
+            There is no live match running right now. Ready to start? Configure 5 or 6 teams below to create an official match room.
           </p>
         </div>
         <Link to="/admin/history">
-          <PixelButton variant="ghost" size="sm">
+          <PixelButton variant="primary" size="sm">
             PAST MATCHES
           </PixelButton>
         </Link>

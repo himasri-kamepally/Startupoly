@@ -4,10 +4,15 @@ export type StatusType =
   | 'CREATED'
   | 'LOBBY'
   | 'ACTIVE'
+  | 'PAUSED'
   | 'TIME_EXPIRED'
   | 'FINALIZED'
   | 'BANKRUPT'
-  | 'WAITING';
+  | 'WAITING'
+  | 'NOT_STARTED'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'CANCELLED';
 
 export interface StatusPillProps {
   status: StatusType | string;
@@ -29,7 +34,13 @@ export const StatusPill: React.FC<StatusPillProps> = ({
       bg: 'bg-[#FFFBEB]',
       text: 'text-[#92400E]',
       dot: 'bg-[#F59E0B]',
-      label: 'CREATED',
+      label: 'NOT STARTED',
+    },
+    NOT_STARTED: {
+      bg: 'bg-[#FFFBEB]',
+      text: 'text-[#92400E]',
+      dot: 'bg-[#F59E0B]',
+      label: 'NOT STARTED',
     },
     LOBBY: {
       bg: 'bg-[#EFF6FF]',
@@ -41,7 +52,19 @@ export const StatusPill: React.FC<StatusPillProps> = ({
       bg: 'bg-[#DCFCE7]',
       text: 'text-[#166534]',
       dot: 'bg-[#22C55E]',
-      label: 'ACTIVE',
+      label: 'LIVE',
+    },
+    RUNNING: {
+      bg: 'bg-[#DCFCE7]',
+      text: 'text-[#166534]',
+      dot: 'bg-[#22C55E]',
+      label: 'LIVE',
+    },
+    PAUSED: {
+      bg: 'bg-[#FEF3C7]',
+      text: 'text-[#B45309]',
+      dot: 'bg-[#F59E0B]',
+      label: 'PAUSED',
     },
     TIME_EXPIRED: {
       bg: 'bg-[#FEF2F2]',
@@ -49,11 +72,23 @@ export const StatusPill: React.FC<StatusPillProps> = ({
       dot: 'bg-[#EF4444]',
       label: 'TIME UP',
     },
+    COMPLETED: {
+      bg: 'bg-[#FEF2F2]',
+      text: 'text-[#991B1B]',
+      dot: 'bg-[#EF4444]',
+      label: 'GAME OVER',
+    },
     FINALIZED: {
       bg: 'bg-[#F1F5F9]',
       text: 'text-[#334155]',
       dot: 'bg-[#64748B]',
       label: 'FINALIZED',
+    },
+    CANCELLED: {
+      bg: 'bg-[#F1F5F9]',
+      text: 'text-[#64748B]',
+      dot: 'bg-[#94A3B8]',
+      label: 'CANCELLED',
     },
     BANKRUPT: {
       bg: 'bg-[#450A0A]',

@@ -5,7 +5,7 @@ import {
   WoodenSignboard,
   PixelInputSlots,
   WoodenActionButton,
-  RoamingCharacter,
+  TeamPatrolCharacter,
   PixelCoin,
 } from '../../ui/pixel';
 import { ErrorBanner, useToast, Skeleton } from '../../ui';
@@ -312,13 +312,9 @@ export const TeamJoinPage: React.FC = () => {
           )}
         </WoodenSignboard>
 
-        {/* Pixel Mascot Poly Patrols The Ground (with "Let's play!" speech bubble) */}
-        <div className="absolute bottom-0 right-4 sm:right-16 md:right-28 pointer-events-none">
-          <RoamingCharacter
-            size={52}
-            bubbleText={isSuccess ? 'Lets Go!!' : "Let's play!"}
-            isCheering={isSuccess}
-          />
+        {/* Pixel Mascot Poly Continuously Patrols Along The Green Grass Platform */}
+        <div className="absolute bottom-0 inset-x-0 pointer-events-none z-30">
+          <TeamPatrolCharacter size={48} hasPlatform={false} />
         </div>
       </main>
     </PlainsBackground>

@@ -5,6 +5,7 @@ export interface CountdownProps {
   endsAt: string | null;
   status: string;
   serverNow?: string | null;
+  durationSeconds?: number;
   onExpire?: () => void;
   size?: 'sm' | 'md' | 'lg' | 'hero';
   className?: string;
@@ -15,6 +16,7 @@ export const Countdown: React.FC<CountdownProps> = ({
   endsAt,
   status,
   serverNow,
+  durationSeconds,
   onExpire,
   size = 'md',
   className = '',
@@ -24,8 +26,13 @@ export const Countdown: React.FC<CountdownProps> = ({
     endsAt,
     status,
     serverNow,
+    durationSeconds,
     onExpire,
   });
+
+  const normalizedStatus = status?.toUpperCase();
+  const isGamePaused = normalizedStatus === 'PAUSED';
+  const isNotStarted = normalizedStatus === 'CREATED' || normalizedStatus === 'LOBBY' || normalizedStatus === 'WAITING' || normalizedStatus === 'NOT_STARTED';
 
   const isLowTime = isRunning && remainingMs < 5 * 60 * 1000; // < 5 minutes
 
@@ -38,15 +45,27 @@ export const Countdown: React.FC<CountdownProps> = ({
 
   const colorStyles = isExpired
     ? 'bg-[#FEF2F2] text-[#D32F2F] border-[#D32F2F]'
+    : isGamePaused
+    ? 'bg-[#FEF3C7] text-[#B45309] border-[#B45309]'
     : isLowTime
     ? 'bg-[#FFFBEB] text-[#D32F2F] border-[#D32F2F] animate-pulse'
     : 'bg-[#102040] text-[#FFCC00] border-[#102040]';
+
+  const labelText = isExpired
+    ? 'MATCH ENDED'
+    : isGamePaused
+    ? 'MATCH PAUSED'
+    : isRunning
+    ? 'TIME REMAINING'
+    : isNotStarted
+    ? 'GAME NOT STARTED'
+    : 'GAME TIMER';
 
   return (
     <div className={`inline-flex flex-col items-center select-none ${className}`}>
       {showLabel && (
         <span className="font-pixel text-[10px] text-[#64748B] uppercase tracking-widest mb-1">
-          {isExpired ? 'MATCH ENDED' : isRunning ? 'TIME REMAINING' : 'GAME TIMER'}
+          {labelText}
         </span>
       )}
       <div

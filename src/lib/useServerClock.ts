@@ -10,6 +10,7 @@ export interface UseServerClockOptions {
   endsAt: string | null;
   serverNow?: string | null;
   status?: string;
+  durationSeconds?: number;
   onExpire?: () => void;
   fetchTimeFn?: () => Promise<string>;
 }
@@ -42,7 +43,7 @@ export function useServerClock(
           fetchTimeFn: maybeFetchTimeFn || rpcServerTime,
         };
 
-  const { endsAt, status: roomStatus, onExpire } = options;
+  const { endsAt, status: roomStatus, durationSeconds, onExpire } = options;
   const fetchTimeFn = options.fetchTimeFn || rpcServerTime;
 
   const [offsetMs, setOffsetMs] = useState<number>(0);
@@ -144,7 +145,7 @@ export function useServerClock(
   let formatted = '50:00';
   const normalizedStatus = roomStatus?.toUpperCase();
 
-  if (normalizedStatus === 'TIME_EXPIRED' || normalizedStatus === 'FINALIZED') {
+  if (normalizedStatus === 'TIME_EXPIRED' || normalizedStatus === 'FINALIZED' || normalizedStatus === 'COMPLETED') {
     remainingMs = 0;
     status = 'expired';
     formatted = '00:00';
@@ -153,11 +154,32 @@ export function useServerClock(
       clearInterval(expiryRetryTimerRef.current);
       expiryRetryTimerRef.current = null;
     }
-  } else if (normalizedStatus === 'LOBBY' || normalizedStatus === 'CREATED' || (!endsAt && !normalizedStatus)) {
-    remainingMs = 50 * 60 * 1000;
+  } else if (normalizedStatus === 'PAUSED') {
+    // If paused, clock is frozen at the remaining seconds
+    const remainingSecs = durationSeconds !== undefined ? Math.max(0, durationSeconds) : 50 * 60;
+    remainingMs = remainingSecs * 1000;
     status = 'paused';
-    formatted = '50:00';
-  } else if (endsAt) {
+    formatted = formatMMSS(remainingSecs);
+    if (expiryRetryTimerRef.current) {
+      clearInterval(expiryRetryTimerRef.current);
+      expiryRetryTimerRef.current = null;
+    }
+  } else if (
+    normalizedStatus === 'LOBBY' ||
+    normalizedStatus === 'CREATED' ||
+    normalizedStatus === 'WAITING' ||
+    normalizedStatus === 'NOT_STARTED' ||
+    (!endsAt && (!normalizedStatus || normalizedStatus !== 'ACTIVE'))
+  ) {
+    const totalSecs = durationSeconds !== undefined ? Math.max(0, durationSeconds) : 50 * 60;
+    remainingMs = totalSecs * 1000;
+    status = 'paused';
+    formatted = formatMMSS(totalSecs);
+    if (expiryRetryTimerRef.current) {
+      clearInterval(expiryRetryTimerRef.current);
+      expiryRetryTimerRef.current = null;
+    }
+  } else if (endsAt && (normalizedStatus === 'ACTIVE' || normalizedStatus === 'RUNNING')) {
     const endsAtMs = new Date(endsAt).getTime();
     const serverNow = getServerNow(offsetMs);
     const diff = endsAtMs - serverNow;
@@ -172,8 +194,8 @@ export function useServerClock(
         logger.info('Clock', 'Game timer reached 00:00! Triggering expiry refetch...');
         onExpireRef.current?.();
 
-        // If status is not yet TIME_EXPIRED, start retry polling every 1.5s until server confirms
-        if (!expiryRetryTimerRef.current && normalizedStatus !== 'TIME_EXPIRED') {
+        // Start retry polling every 1.5s until server confirms expiry
+        if (!expiryRetryTimerRef.current) {
           expiryRetryTimerRef.current = setInterval(() => {
             if (isMountedRef.current) {
               logger.debug('Clock', 'Retrying expiry refetch until status is TIME_EXPIRED...');
@@ -193,6 +215,12 @@ export function useServerClock(
         expiryRetryTimerRef.current = null;
       }
     }
+  } else {
+    // Default safe fallback: not expired, idle or waiting
+    const safeSecs = durationSeconds !== undefined ? Math.max(0, durationSeconds) : 50 * 60;
+    remainingMs = safeSecs * 1000;
+    status = 'idle';
+    formatted = formatMMSS(safeSecs);
   }
 
   const isExpired = status === 'expired';

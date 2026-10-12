@@ -1,6 +1,7 @@
 import React from 'react';
 
 export type MarioPose = 'idle' | 'run-1' | 'run-2' | 'run-3' | 'dash' | 'jump';
+export type MarioExpression = 'wave' | 'confident' | 'point' | 'celebrate' | 'normal';
 
 export interface PixelMarioProps {
   size?: number;
@@ -10,6 +11,7 @@ export interface PixelMarioProps {
   stripAnimation?: 'walk' | 'idle' | 'hop' | 'static';
   flipX?: boolean;
   ariaHidden?: boolean;
+  expression?: MarioExpression;
 }
 
 /**
@@ -31,6 +33,7 @@ export const PixelMario: React.FC<PixelMarioProps> = ({
   stripAnimation = 'static',
   flipX = false,
   ariaHidden = true,
+  expression = 'normal',
 }) => {
   // If rendering 7-frame strip for living world character:
   if (isStrip) {
@@ -167,8 +170,38 @@ export const PixelMario: React.FC<PixelMarioProps> = ({
             <rect x="5" y="10" width="3" height="4" fill="#E52521" />
             <rect x="16" y="10" width="3" height="4" fill="#E52521" />
             <rect x="10" y="11" width="2" height="2" fill="#FFCC00" />
-            <rect x="16" y="12" width="4" height="3" fill="#FFFFFF" />
-            <rect x="3" y="13" width="3" height="3" fill="#FFFFFF" />
+            {expression === 'wave' ? (
+              <>
+                <rect x="16" y="5" width="3" height="4" fill="#E52521" />
+                <rect x="17" y="1" width="4" height="4" fill="#FFFFFF" />
+                <rect x="3" y="13" width="3" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'point' ? (
+              <>
+                <rect x="16" y="10" width="4" height="3" fill="#E52521" />
+                <rect x="20" y="9" width="4" height="4" fill="#FFFFFF" />
+                <rect x="3" y="13" width="3" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'celebrate' ? (
+              <>
+                <rect x="16" y="3" width="3" height="5" fill="#E52521" />
+                <rect x="16" y="0" width="4" height="3" fill="#FFFFFF" />
+                <rect x="3" y="10" width="3" height="4" fill="#E52521" />
+                <rect x="2" y="7" width="4" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'confident' ? (
+              <>
+                <rect x="16" y="8" width="3" height="4" fill="#E52521" />
+                <rect x="18" y="6" width="4" height="4" fill="#FFFFFF" />
+                <rect x="19" y="5" width="2" height="2" fill="#FFFFFF" />
+                <rect x="3" y="13" width="3" height="3" fill="#FFFFFF" />
+              </>
+            ) : (
+              <>
+                <rect x="16" y="12" width="4" height="3" fill="#FFFFFF" />
+                <rect x="3" y="13" width="3" height="3" fill="#FFFFFF" />
+              </>
+            )}
             {/* Stride legs */}
             <rect x="4" y="17" width="4" height="4" fill="#0B4FD7" />
             <rect x="2" y="20" width="5" height="3" fill="#78350F" />
@@ -196,8 +229,38 @@ export const PixelMario: React.FC<PixelMarioProps> = ({
             <rect x="16" y="9" width="3" height="4" fill="#E52521" />
             <rect x="9" y="10" width="2" height="2" fill="#FFCC00" />
             <rect x="13" y="10" width="2" height="2" fill="#FFCC00" />
-            <rect x="4" y="12" width="3" height="3" fill="#FFFFFF" />
-            <rect x="16" y="12" width="3" height="3" fill="#FFFFFF" />
+            {expression === 'wave' ? (
+              <>
+                <rect x="16" y="4" width="3" height="4" fill="#E52521" />
+                <rect x="17" y="0" width="4" height="4" fill="#FFFFFF" />
+                <rect x="4" y="12" width="3" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'point' ? (
+              <>
+                <rect x="16" y="9" width="4" height="3" fill="#E52521" />
+                <rect x="20" y="8" width="4" height="4" fill="#FFFFFF" />
+                <rect x="4" y="12" width="3" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'celebrate' ? (
+              <>
+                <rect x="16" y="2" width="3" height="5" fill="#E52521" />
+                <rect x="16" y="0" width="4" height="3" fill="#FFFFFF" />
+                <rect x="4" y="9" width="3" height="4" fill="#E52521" />
+                <rect x="3" y="6" width="4" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'confident' ? (
+              <>
+                <rect x="16" y="7" width="3" height="4" fill="#E52521" />
+                <rect x="18" y="5" width="4" height="4" fill="#FFFFFF" />
+                <rect x="19" y="4" width="2" height="2" fill="#FFFFFF" />
+                <rect x="4" y="12" width="3" height="3" fill="#FFFFFF" />
+              </>
+            ) : (
+              <>
+                <rect x="4" y="12" width="3" height="3" fill="#FFFFFF" />
+                <rect x="16" y="12" width="3" height="3" fill="#FFFFFF" />
+              </>
+            )}
             <rect x="8" y="16" width="8" height="4" fill="#0B4FD7" />
             <rect x="7" y="20" width="5" height="3" fill="#78350F" />
             <rect x="12" y="20" width="5" height="3" fill="#78350F" />
@@ -222,8 +285,38 @@ export const PixelMario: React.FC<PixelMarioProps> = ({
             <rect x="5" y="10" width="3" height="4" fill="#E52521" />
             <rect x="16" y="10" width="3" height="4" fill="#E52521" />
             <rect x="11" y="11" width="2" height="2" fill="#FFCC00" />
-            <rect x="3" y="12" width="4" height="3" fill="#FFFFFF" />
-            <rect x="16" y="13" width="3" height="3" fill="#FFFFFF" />
+            {expression === 'wave' ? (
+              <>
+                <rect x="16" y="5" width="3" height="4" fill="#E52521" />
+                <rect x="17" y="1" width="4" height="4" fill="#FFFFFF" />
+                <rect x="3" y="12" width="4" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'point' ? (
+              <>
+                <rect x="16" y="10" width="4" height="3" fill="#E52521" />
+                <rect x="20" y="9" width="4" height="4" fill="#FFFFFF" />
+                <rect x="3" y="12" width="4" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'celebrate' ? (
+              <>
+                <rect x="16" y="3" width="3" height="5" fill="#E52521" />
+                <rect x="16" y="0" width="4" height="3" fill="#FFFFFF" />
+                <rect x="3" y="9" width="3" height="4" fill="#E52521" />
+                <rect x="2" y="6" width="4" height="3" fill="#FFFFFF" />
+              </>
+            ) : expression === 'confident' ? (
+              <>
+                <rect x="16" y="8" width="3" height="4" fill="#E52521" />
+                <rect x="18" y="6" width="4" height="4" fill="#FFFFFF" />
+                <rect x="19" y="5" width="2" height="2" fill="#FFFFFF" />
+                <rect x="3" y="12" width="4" height="3" fill="#FFFFFF" />
+              </>
+            ) : (
+              <>
+                <rect x="3" y="12" width="4" height="3" fill="#FFFFFF" />
+                <rect x="16" y="13" width="3" height="3" fill="#FFFFFF" />
+              </>
+            )}
             <rect x="12" y="17" width="4" height="4" fill="#0B4FD7" />
             <rect x="13" y="20" width="5" height="3" fill="#78350F" />
             <rect x="4" y="17" width="4" height="4" fill="#0B4FD7" />

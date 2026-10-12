@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PixelButton, PixelCard, StatusPill, Modal, useToast } from '../../ui';
 import { rpcAdminReleaseTeam, rpcAdminStartGame, AdminRoomSnapshot } from '../../data/rpc';
+import { GameControlStatusCard } from './console/GameControlStatusCard';
 
 interface LobbyViewProps {
   snapshot: AdminRoomSnapshot;
@@ -59,6 +60,18 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Prominent Game Control Status Card */}
+      <GameControlStatusCard
+        roomCode={room.code}
+        status={room.status}
+        lifecycleState={room.lifecycle_state}
+        endsAt={room.ends_at}
+        serverNow={snapshot.server_now}
+        durationSeconds={room.duration_seconds}
+        onStartGame={() => setShowStartModal(true)}
+        isActionLoading={isStarting}
+      />
+
       {/* 3-Meter Projector Hero Card */}
       <PixelCard
         title="LIVE TOURNAMENT LOBBY • PROJECTOR VIEW"

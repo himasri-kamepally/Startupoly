@@ -64,7 +64,7 @@ export const WoodenSignboard: React.FC<WoodenSignboardProps> = ({
 
       {/* Main Wooden Board Body */}
       <div
-        className={`w-full relative z-20 ${animClass} rounded-none border-4 border-[#102040] shadow-[8px_8px_0px_#102040] ${
+        className={`w-full relative z-20 ${animClass} rounded-none border-4 border-[#102040] shadow-[8px_8px_0px_#102040] hover:-translate-y-0.5 transition-transform duration-150 ${
           isCastle
             ? 'bg-[#3D2817] border-4 border-[#102040]'
             : 'bg-[#B8652A]'
@@ -73,6 +73,11 @@ export const WoodenSignboard: React.FC<WoodenSignboardProps> = ({
           boxShadow: '6px 6px 0px #102040, 10px 10px 0px rgba(16, 32, 64, 0.4)',
         }}
       >
+        {/* Subtle animated border shimmer */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+          <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-amber-300/15 to-transparent anim-admin-card-shimmer" />
+        </div>
+
         {/* Overgrown Ivy / Vines for Wood Variant */}
         {!isCastle && (
           <>
@@ -163,7 +168,8 @@ export const WoodenSignboard: React.FC<WoodenSignboardProps> = ({
           }`}
           style={{
             backgroundImage:
-              'linear-gradient(180deg, rgba(255,255,255,0.08) 0px, transparent 4px, rgba(0,0,0,0.12) 100%)',
+              'radial-gradient(rgba(74, 46, 27, 0.15) 1px, transparent 1px), linear-gradient(180deg, rgba(255,255,255,0.08) 0px, transparent 4px, rgba(0,0,0,0.12) 100%)',
+            backgroundSize: '8px 8px, 100% 100%',
           }}
         >
           {/* Subtle horizontal plank divider lines */}

@@ -6,7 +6,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type RoomStatus = 'CREATED' | 'LOBBY' | 'ACTIVE' | 'TIME_EXPIRED' | 'FINALIZED';
+export type RoomStatus = 'CREATED' | 'LOBBY' | 'ACTIVE' | 'PAUSED' | 'TIME_EXPIRED' | 'FINALIZED';
+
+export type LifecycleState = 'not_started' | 'waiting' | 'running' | 'paused' | 'completed' | 'cancelled';
 
 export type ActivityEventType =
   | 'ROOM_CREATED'
@@ -567,6 +569,18 @@ export interface Database {
         Returns: Json;
       };
       admin_abort_game: {
+        Args: { room_id: string; note?: string | null };
+        Returns: Json;
+      };
+      admin_pause_game: {
+        Args: { room_id: string };
+        Returns: Json;
+      };
+      admin_resume_game: {
+        Args: { room_id: string };
+        Returns: Json;
+      };
+      admin_end_game: {
         Args: { room_id: string; note?: string | null };
         Returns: Json;
       };

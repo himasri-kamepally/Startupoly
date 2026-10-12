@@ -19,11 +19,12 @@ import { DistantHillsAndCastle } from './DistantHillsAndCastle';
 import { SkyLayer } from './SkyLayer';
 import { TapCoinBurst } from './TapCoinBurst';
 import { GameIntroOverlay } from './intro/GameIntroOverlay';
-import { RulesSection } from './RulesSection';
+import { GameRulesModal } from './rules/GameRulesModal';
 
 export const LandingPage: React.FC = () => {
   const { isFirstVisit, markSeen } = useFirstVisit();
   const [showIntro, setShowIntro] = useState<boolean>(true);
+  const [showRules, setShowRules] = useState<boolean>(false);
   const [activeCta, setActiveCta] = useState<'join' | 'admin' | null>(null);
 
   // Check prefers-reduced-motion
@@ -33,6 +34,13 @@ export const LandingPage: React.FC = () => {
 
   // Synchronize document pause state with tab visibility
   usePageVisibility();
+
+  // Open rules if accessed with #rules
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#rules') {
+      setShowRules(true);
+    }
+  }, []);
 
   // Safety fallback to mark entrance animation seen
   useEffect(() => {
@@ -52,9 +60,13 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div
+      id="top"
       data-cta={activeCta || undefined}
-      id="top" className="min-h-screen nes-sky-gradient flex flex-col justify-between relative overflow-x-hidden selection:bg-[#FFCC00] selection:text-[#102040] anim-scene-transition"
+      className="min-h-screen lg:h-screen lg:max-h-screen nes-sky-gradient flex flex-col justify-between relative overflow-x-hidden selection:bg-[#FFCC00] selection:text-[#102040] anim-scene-transition"
     >
+      {/* Target anchor for external #rules links */}
+      <div id="rules" className="sr-only" aria-hidden="true" />
+
       {/* ======================================================================= */}
       {/* RETRO GAME OPENING INTRO CINEMATIC (Overlay)                           */}
       {/* ======================================================================= */}
@@ -62,17 +74,31 @@ export const LandingPage: React.FC = () => {
         <GameIntroOverlay onComplete={() => setShowIntro(false)} />
       )}
 
-      <a
-        href="#rules"
-        className="absolute top-3 right-3 sm:top-5 sm:right-5 z-30 font-pixel text-[9px] sm:text-[10px] text-[#102040] bg-[#FFCC00] border-2 border-[#102040] px-2.5 py-2 shadow-[3px_3px_0_#102040] hover:bg-white transition-colors"
-      >
-        RULES ↓
-      </a>
 
       {/* ======================================================================= */}
       {/* LAYER 0: Upper Sky Moving Clouds Atmosphere                             */}
       {/* ======================================================================= */}
       <SkyLayer />
+
+      {/* ======================================================================= */}
+      {/* MARIO-ERA PIXEL CONTROL: GAME RULES POPUP TRIGGER BUTTON                */}
+      {/* ======================================================================= */}
+      <button
+        type="button"
+        id="game-rules-button"
+        data-testid="game-rules-button"
+        onClick={() => setShowRules(true)}
+        aria-label="Open Game Rules"
+        className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-4 z-30 group inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 bg-[#102040] hover:bg-[#182C52] active:translate-y-0.5 text-[#FFCC00] hover:text-[#FFFBEB] border-2 border-[#FFCC00] shadow-[2px_2px_0px_#B84418] hover:shadow-[3px_3px_0px_#B84418] rounded-xs font-pixel text-[8px] sm:text-[9px] tracking-wider transition-all cursor-pointer select-none"
+      >
+        <span className="text-[10px] sm:text-xs text-[#FFCC00] group-hover:scale-110 transition-transform">📜</span>
+        <span>GAME RULES</span>
+      </button>
+
+      {/* ======================================================================= */}
+      {/* RETRO PIXEL-ART RULES MODAL OVERLAY                                    */}
+      {/* ======================================================================= */}
+      <GameRulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
 
       {/* ======================================================================= */}
       {/* LAYER 1: Distant Hills & Castle Silhouette Layer                         */}
@@ -85,13 +111,14 @@ export const LandingPage: React.FC = () => {
       <FloatingPlatforms />
 
       {/* ======================================================================= */}
+      {/* ======================================================================= */}
       {/* LAYER 3: Main Title Screen UI (Logo, Status, Headline, Signboards)       */}
       {/* ======================================================================= */}
-      <div className="flex-1 flex flex-col justify-center pt-[max(1rem,env(safe-area-inset-top))] sm:pt-2 md:pt-4 lg:pt-5 pb-1 sm:pb-2 relative z-10">
+      <div className="flex-1 flex flex-col justify-center pt-[max(0.25rem,env(safe-area-inset-top))] sm:pt-1 md:pt-2 pb-0 relative z-10">
         {/* NES Sky Header */}
-        <header className="relative pb-2 sm:pb-3 md:pb-4 px-4 text-center z-10">
+        <header className="relative pb-1 sm:pb-2 md:pb-3 px-3 sm:px-4 text-center z-10">
           {/* Level 1: Wordmark Logo */}
-          <div className={`flex flex-col items-center select-none text-center mb-1.5 sm:mb-2 ${isFirstVisit ? 'anim-entrance-logo' : ''}`}>
+          <div className={`flex flex-col items-center select-none text-center mb-1 sm:mb-1.5 ${isFirstVisit ? 'anim-entrance-logo' : ''}`}>
             <div className="relative inline-flex items-center gap-2 sm:gap-3">
               <PixelCoin
                 size={22}
@@ -109,8 +136,8 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Level 2: Subtitle Badge */}
-            <div className="mt-1 sm:mt-1.5 inline-flex items-center gap-1 sm:gap-2 px-2.5 py-0.5 bg-[#102040] border-2 border-[#FFCC00] rounded-sm shadow-[2px_2px_0px_#B84418]">
-              <span className="font-pixel text-[8px] sm:text-[9px] md:text-[10px] text-[#FFFBEB] tracking-widest font-bold">
+            <div className="mt-1 sm:mt-1.5 inline-flex items-center gap-1 sm:gap-1.5 px-3 py-0.5 sm:py-1 bg-[#102040] border-2 border-[#FFCC00] rounded-sm shadow-[2px_2px_0px_#B84418]">
+              <span className="font-pixel text-[9px] sm:text-[10px] md:text-[11px] text-[#FFFBEB] tracking-widest font-bold">
                 ★{' '}
                 <span className={isFirstVisit ? 'anim-entrance-word-1' : ''}>DREAM</span>{' '}
                 ·{' '}
@@ -127,11 +154,11 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Level 3: Hero Headline */}
-          <div className={`mt-1.5 sm:mt-2 text-center max-w-lg mx-auto px-2 ${isFirstVisit ? 'anim-entrance-tagline' : ''}`}>
-            <p className="font-pixel text-[11px] sm:text-xs md:text-sm text-[#FFFBEB] uppercase tracking-wider drop-shadow-[2px_2px_0px_#102040] leading-snug">
-              THE BOARD IS PHYSICAL.
-              <br className="sm:hidden" /> THE SCORE IS LIVE.
+          {/* Level 3: Hero Headline (Two Separate Lines with Balanced Spacing) */}
+          <div className={`mt-2 sm:mt-2.5 md:mt-3 text-center max-w-lg mx-auto px-2 ${isFirstVisit ? 'anim-entrance-tagline' : ''}`}>
+            <p className="font-pixel text-[11px] sm:text-xs md:text-[13px] text-[#FFFBEB] uppercase tracking-wider drop-shadow-[2px_2px_0px_#102040] leading-tight sm:leading-snug">
+              <span className="block">THE BOARD IS PHYSICAL.</span>
+              <span className="block">THE SCORE IS LIVE.</span>
             </p>
           </div>
         </header>
@@ -241,19 +268,19 @@ export const LandingPage: React.FC = () => {
               onAnimationEnd={handleEntranceEnd}
               className={`flex flex-col items-center w-full max-w-[280px] opacity-90 hover:opacity-100 transition-opacity ${isFirstVisit ? 'anim-card-arrival-admin' : ''}`}
             >
-              {/* Castle Battlements & Compact Waving Flag Header */}
+              {/* Castle Battlements & Cyan/Gold Waving Flag Header */}
               <div className="hidden sm:flex justify-between items-end w-full px-1 -mb-1 z-10 pointer-events-none">
-                {/* 5 Compact Castle Merlons */}
+                {/* 5 Slate-Blue Castle Merlons */}
                 <div className="flex gap-1">
-                  <div className="w-3.5 h-3 bg-[#64748B] border-t-2 border-x-2 border-[#181E28]" />
-                  <div className="w-3.5 h-3 bg-[#64748B] border-t-2 border-x-2 border-[#181E28]" />
-                  <div className="w-3.5 h-3 bg-[#64748B] border-t-2 border-x-2 border-[#181E28]" />
-                  <div className="w-3.5 h-3 bg-[#64748B] border-t-2 border-x-2 border-[#181E28]" />
-                  <div className="w-3.5 h-3 bg-[#64748B] border-t-2 border-x-2 border-[#181E28]" />
+                  <div className="w-3.5 h-3 bg-[#3B4D71] border-t-2 border-x-2 border-[#121A2A]" />
+                  <div className="w-3.5 h-3 bg-[#3B4D71] border-t-2 border-x-2 border-[#121A2A]" />
+                  <div className="w-3.5 h-3 bg-[#3B4D71] border-t-2 border-x-2 border-[#121A2A]" />
+                  <div className="w-3.5 h-3 bg-[#3B4D71] border-t-2 border-x-2 border-[#121A2A]" />
+                  <div className="w-3.5 h-3 bg-[#3B4D71] border-t-2 border-x-2 border-[#121A2A]" />
                 </div>
-                {/* Compact Waving Flag on Pole */}
+                {/* Compact Waving Flag on Pole with Cyan/Gold Sheen */}
                 <div className="flex items-start -mb-0.5 mr-0.5">
-                  <div className="w-1 h-6 bg-[#181E28] shrink-0 rounded-t-sm" />
+                  <div className="w-1 h-6 bg-[#121A2A] shrink-0 rounded-t-sm" />
                   <svg
                     width="20"
                     height="12"
@@ -261,8 +288,9 @@ export const LandingPage: React.FC = () => {
                     fill="none"
                     className="anim-flag-flutter origin-left -ml-0.5"
                   >
-                    <path d="M0 0 L24 8 L0 16 Z" fill="#94A3B8" stroke="#181E28" strokeWidth="2" />
-                    <path d="M0 2 L18 8 L0 10 Z" fill="#CBD5E1" />
+                    <path d="M0 0 L24 8 L0 16 Z" fill="#00F0FF" stroke="#121A2A" strokeWidth="2" />
+                    <path d="M0 2 L18 8 L0 10 Z" fill="#38BDF8" />
+                    <rect x="3" y="6" width="3" height="3" fill="#FFCC00" />
                   </svg>
                 </div>
               </div>
@@ -270,44 +298,58 @@ export const LandingPage: React.FC = () => {
               <div
                 onPointerEnter={() => setActiveCta('admin')}
                 onPointerLeave={() => setActiveCta(null)}
-                className="group relative w-full bg-[#475569] border-[3px] border-[#181E28] shadow-[4px_4px_0px_#102040] hover:shadow-[6px_6px_0px_#102040] hover:-translate-y-0.5 transition-all duration-100 ease-out p-2 sm:p-2.5 flex flex-col justify-between items-center text-center rounded-sm select-none"
+                className="group relative w-full bg-gradient-to-b from-[#3E5276] via-[#354664] to-[#28364E] border-[3px] border-[#121A2A] shadow-[5px_5px_0px_#0C1320,0_4px_12px_rgba(18,26,42,0.3)] hover:shadow-[7px_7px_0px_#0C1320,0_6px_16px_rgba(0,240,255,0.15)] hover:-translate-y-0.5 transition-all duration-100 ease-out p-2 sm:p-2.5 flex flex-col justify-between items-center text-center rounded-sm select-none"
               >
-                {/* Left stone highlight */}
-                <div className="absolute top-0 bottom-0 left-0 w-2 bg-[#64748B] border-r border-[#334155] pointer-events-none" />
-                {/* Right stone shadow */}
-                <div className="absolute top-0 bottom-0 right-0 w-2 bg-[#334155] border-l border-[#1E293B] pointer-events-none" />
-                {/* Top stone highlight */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#94A3B8] pointer-events-none" />
-                {/* Bottom stone shadow */}
-                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#1E293B] pointer-events-none" />
+                {/* Subtle animated border shimmer */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xs z-20">
+                  <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-cyan-400/15 to-transparent anim-admin-card-shimmer" />
+                </div>
 
-                {/* Inner Slate Face */}
-                <div className="relative w-full bg-[#E2E8F0] border-2 border-[#64748B] shadow-inner pt-2 pb-2 px-2 sm:px-3 flex flex-col items-center justify-between gap-2 rounded-none z-10">
-                  {/* 4 Corner Silver Rivets with Screws */}
-                  <div className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-[#CBD5E1] border border-[#181E28] shadow-[1px_1px_0px_#475569] flex items-center justify-center">
-                    <div className="w-1 h-0.5 bg-[#181E28]" />
+                {/* Left slate highlight */}
+                <div className="absolute top-0 bottom-0 left-0 w-2 bg-[#4D658E] border-r border-[#263750] pointer-events-none" />
+                {/* Right deep shadow */}
+                <div className="absolute top-0 bottom-0 right-0 w-2 bg-[#1B2536] border-l border-[#121A2A] pointer-events-none" />
+                {/* Top luminous highlight */}
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#5B75A4] pointer-events-none" />
+                {/* Bottom subtle shadow */}
+                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#141E2C] pointer-events-none" />
+
+                {/* Inner Slate-Blue Console Face */}
+                <div
+                  className="relative w-full border-2 border-[#58729A] shadow-inner pt-2 pb-2 px-2 sm:px-3 flex flex-col items-center justify-between gap-2 rounded-none z-10"
+                  style={{
+                    backgroundColor: '#D5E0F1',
+                    backgroundImage: 'radial-gradient(rgba(30, 58, 95, 0.08) 1px, transparent 1px), linear-gradient(180deg, #E2ECF8 0%, #D5E0F1 60%, #C4D3E8 100%)',
+                    backgroundSize: '8px 8px, 100% 100%',
+                  }}
+                >
+                  {/* 4 Corner Metal Screws */}
+                  <div className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-[#94A3B8] border border-[#1E293B] shadow-[1px_1px_0px_#FFFFFF] flex items-center justify-center">
+                    <div className="w-1 h-0.5 bg-[#1E293B]" />
                   </div>
-                  <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#CBD5E1] border border-[#181E28] shadow-[1px_1px_0px_#475569] flex items-center justify-center">
-                    <div className="w-1 h-0.5 bg-[#181E28]" />
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#94A3B8] border border-[#1E293B] shadow-[1px_1px_0px_#FFFFFF] flex items-center justify-center">
+                    <div className="w-1 h-0.5 bg-[#1E293B]" />
                   </div>
-                  <div className="absolute bottom-1.5 left-1.5 w-2 h-2 rounded-full bg-[#CBD5E1] border border-[#181E28] shadow-[1px_1px_0px_#475569] flex items-center justify-center">
-                    <div className="w-1 h-0.5 bg-[#181E28]" />
+                  <div className="absolute bottom-1.5 left-1.5 w-2 h-2 rounded-full bg-[#94A3B8] border border-[#1E293B] shadow-[1px_1px_0px_#FFFFFF] flex items-center justify-center">
+                    <div className="w-1 h-0.5 bg-[#1E293B]" />
                   </div>
-                  <div className="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full bg-[#CBD5E1] border border-[#181E28] shadow-[1px_1px_0px_#475569] flex items-center justify-center">
-                    <div className="w-1 h-0.5 bg-[#181E28]" />
+                  <div className="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full bg-[#94A3B8] border border-[#1E293B] shadow-[1px_1px_0px_#FFFFFF] flex items-center justify-center">
+                    <div className="w-1 h-0.5 bg-[#1E293B]" />
                   </div>
 
-                  {/* Icon & Title */}
+                  {/* Icon & Title with Pulsing Status Dot and Blinking Cursor */}
                   <div className="flex flex-col items-center text-center gap-1 pt-0.5">
-                    <div className="shrink-0 group-hover:scale-105 transition-transform duration-100">
+                    <div className="shrink-0 group-hover:scale-105 transition-transform duration-100 drop-shadow-[0_2px_4px_rgba(18,26,42,0.2)]">
                       <PixelTerminalIcon size={32} />
                     </div>
-                    <h2 className="font-pixel text-[10px] sm:text-xs text-[#334155] uppercase tracking-wider font-bold">
+                    <h2 className="font-pixel text-[10px] sm:text-xs text-[#0F172A] uppercase tracking-wider font-extrabold flex items-center justify-center gap-1 drop-shadow-[1px_1px_0px_#FFFFFF]">
                       EVENT ADMIN
+                      <span className="inline-block w-1.5 h-1.5 bg-[#0284C7] shadow-[0_0_6px_#00F0FF] anim-pulse-dot" />
+                      <span className="font-mono text-[#0284C7] anim-cursor-blink text-xs -ml-0.5 select-none">_</span>
                     </h2>
                   </div>
 
-                  {/* Subordinate Secondary Button: ADMIN CONSOLE */}
+                  {/* High-Contrast Action Button: ADMIN CONSOLE */}
                   <ArcadeLink
                     to="/admin"
                     variant="primary"
@@ -316,22 +358,22 @@ export const LandingPage: React.FC = () => {
                     ctaType="admin"
                     onFocus={() => setActiveCta('admin')}
                     onBlur={() => setActiveCta(null)}
-                    className="!bg-[#334155] hover:!bg-[#1E293B] !border-2 !border-[#181E28] !text-[#F1F5F9] font-bold text-[10px] sm:text-xs py-1.5 shadow-[0_2px_0_#0F172A,2px_2px_0_#181E28] hover:-translate-y-[1px] hover:shadow-[0_3px_0_#0F172A,2px_3px_0_#181E28] active:translate-y-0.5 active:shadow-[0_1px_0_#0F172A,1px_1px_0_#181E28] motion-reduce:active:translate-y-0 motion-reduce:hover:translate-y-0 transition-all"
+                    className="!bg-[#223554] hover:!bg-[#2C446C] !border-2 !border-[#102040] !text-[#FFFFFF] font-bold text-[10px] sm:text-xs py-1.5 sm:py-2 shadow-[0_2px_0_#0F172A,2px_2px_0_#102040] hover:-translate-y-[1px] hover:shadow-[0_0_8px_rgba(56,189,248,0.3),0_3px_0_#0F172A,2px_3px_0_#102040] active:translate-y-0.5 active:shadow-[0_1px_0_#0F172A,1px_1px_0_#181E28] motion-reduce:active:translate-y-0 motion-reduce:hover:translate-y-0 transition-all tracking-wider"
                   >
                     ADMIN CONSOLE
                   </ArcadeLink>
                 </div>
               </div>
 
-              {/* Stone Pillar Support Posts (Planted into ground) */}
+              {/* Slate Stone Pillar Support Posts */}
               <div className="hidden sm:flex justify-between w-4/5 px-4 -mt-1 pointer-events-none z-0">
-                <div className="w-6 h-8 bg-[#475569] border-x-2 border-b-2 border-[#181E28] flex flex-col justify-around py-1">
-                  <div className="w-full h-0.5 bg-[#1E293B]" />
-                  <div className="w-full h-0.5 bg-[#1E293B]" />
+                <div className="w-6 h-8 bg-[#181D35] border-x-2 border-b-2 border-[#0A0E1A] flex flex-col justify-around py-1">
+                  <div className="w-full h-0.5 bg-[#0E1324]" />
+                  <div className="w-full h-0.5 bg-[#0E1324]" />
                 </div>
-                <div className="w-6 h-8 bg-[#475569] border-x-2 border-b-2 border-[#181E28] flex flex-col justify-around py-1">
-                  <div className="w-full h-0.5 bg-[#1E293B]" />
-                  <div className="w-full h-0.5 bg-[#1E293B]" />
+                <div className="w-6 h-8 bg-[#181D35] border-x-2 border-b-2 border-[#0A0E1A] flex flex-col justify-around py-1">
+                  <div className="w-full h-0.5 bg-[#0E1324]" />
+                  <div className="w-full h-0.5 bg-[#0E1324]" />
                 </div>
               </div>
             </div>
@@ -390,7 +432,7 @@ export const LandingPage: React.FC = () => {
             <div className="flex justify-around w-4/5 -mt-0.5">
               <div className="w-3.5 h-2.5 bg-[#8B2500] border-b-2 border-x-2 border-[#181512]" />
               <div className="w-4 h-3 bg-[#8B2500] border-b-2 border-x-2 border-[#181512]" />
-              <div className="w-3 h-2 bg-[#8B2500] border-b-2 border-x-2 border-[#181512]" />
+              <div className="w-4 h-3 bg-[#8B2500] border-b-2 border-x-2 border-[#181512]" />
               <div className="w-4 h-3 bg-[#8B2500] border-b-2 border-x-2 border-[#181512]" />
               <div className="w-3.5 h-2.5 bg-[#8B2500] border-b-2 border-x-2 border-[#181512]" />
             </div>
@@ -398,7 +440,6 @@ export const LandingPage: React.FC = () => {
         </main>
       </div>
 
-      <RulesSection />
 
       {/* ======================================================================= */}
       {/* Tap / Touch Easter Egg Bursts (Phase 4)                                 */}

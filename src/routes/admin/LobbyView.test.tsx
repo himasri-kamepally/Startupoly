@@ -8,6 +8,7 @@ import { AdminRoomSnapshot } from '../../data/rpc';
 vi.mock('../../data/rpc', () => ({
   rpcAdminReleaseTeam: vi.fn(),
   rpcAdminStartGame: vi.fn(),
+  rpcServerTime: vi.fn().mockResolvedValue(new Date().toISOString()),
 }));
 
 describe('LobbyView', () => {
@@ -115,7 +116,7 @@ describe('LobbyView', () => {
   it('renders huge room code and team PINs', () => {
     renderComponent();
 
-    expect(screen.getByText('ABC890')).toBeInTheDocument();
+    expect(screen.getAllByText('ABC890')[0]).toBeInTheDocument();
     expect(screen.getByText('1111')).toBeInTheDocument();
     expect(screen.getByText('2222')).toBeInTheDocument();
     expect(screen.getByText('1 / 5 TEAMS CONNECTED')).toBeInTheDocument();
