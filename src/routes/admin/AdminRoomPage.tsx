@@ -1,16 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAdminRoom } from '../../data/useAdminRoom';
-import {
-  PixelCard,
-  StatusPill,
-  ConnectionPill,
-  ErrorBanner,
-  Skeleton,
-  PixelBrickTile,
-  AdminPatrolCharacter,
-  AdminSkyBackground,
-} from '../../ui';
+import { PixelCard, StatusPill, ConnectionPill, ErrorBanner, Skeleton, PixelBrickTile } from '../../ui';
 import { SetupView } from './SetupView';
 import { LobbyView } from './LobbyView';
 import { ActiveSummaryView } from './ActiveSummaryView';
@@ -41,24 +32,15 @@ export const AdminRoomPage: React.FC = () => {
   }
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-b from-[#3B82F6] via-[#5C94FC] to-[#87CEEB] text-white flex flex-col justify-between relative overflow-hidden select-none"
-      style={{
-        backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px)',
-        backgroundSize: '16px 16px',
-      }}
-    >
-      {/* Background Decor (Clouds, Sparkles, Birds, Faded Mountains) */}
-      <AdminSkyBackground />
-
+    <div className="min-h-screen bg-[#5C94FC] flex flex-col justify-between">
       {/* Top Navbar */}
-      <header className="relative z-20 bg-gradient-to-r from-[#0B1326] via-[#111E3B] to-[#0D152A] text-white border-b-4 border-[#1E294B] px-4 py-3 flex items-center justify-between shadow-[0_4px_0px_#050810,0_2px_8px_rgba(0,0,0,0.4)]">
+      <header className="bg-[#102040] text-white border-b-4 border-[#102040] px-4 py-3 flex items-center justify-between shadow-[0_4px_0px_#102040]">
         <div className="flex items-center gap-3">
           <Link
             to="/admin"
-            className="font-pixel text-[11px] bg-[#FFCC00] text-[#0A101D] hover:bg-[#F5BF00] px-3 py-1.5 border-2 border-[#1E294B] shadow-[2px_2px_0px_#050810] active:translate-y-0.5 transition-all inline-flex items-center gap-1.5 font-bold uppercase"
+            className="font-pixel text-xs text-[#FFCC00] hover:underline flex items-center gap-1"
           >
-            ◄ BACK TO ADMIN CONSOLE
+            ◄ CONSOLE
           </Link>
           <span className="font-pixel text-xs text-white border-l-2 border-white/20 pl-3">
             ROOM {snapshot?.room.code || roomId?.slice(0, 6).toUpperCase()}
@@ -75,14 +57,14 @@ export const AdminRoomPage: React.FC = () => {
       </header>
 
       {/* Responsive width notice for small devices (< 1024px) */}
-      <div className="relative z-20 lg:hidden bg-[#FFCC00] text-[#102040] px-4 py-2 text-center border-b-4 border-[#102040] shadow-[0_2px_0px_#102040]">
+      <div className="lg:hidden bg-[#FFCC00] text-[#102040] px-4 py-2 text-center border-b-4 border-[#102040] shadow-[0_2px_0px_#102040]">
         <p className="font-pixel text-[11px] leading-relaxed">
           💻 Use a laptop for the admin console. Full operations grid is optimized for screens ≥ 1024px.
         </p>
       </div>
 
       {/* Main Room Lifecycle Body */}
-      <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
         {status === 'loading' && (
           <div className="flex flex-col gap-4">
             <PixelCard title="LOADING TOURNAMENT ROOM..." headerBg="navy">
@@ -126,11 +108,8 @@ export const AdminRoomPage: React.FC = () => {
         )}
       </main>
 
-      {/* Mascot Patrol On Green Grass Platform & Brick Ground Base */}
-      <div className="relative z-20 w-full">
-        <AdminPatrolCharacter size={44} hasPlatform={false} />
-        <PixelBrickTile hasGrass={true} className="h-8" />
-      </div>
+      {/* Brick Ground Base */}
+      <PixelBrickTile hasGrass={true} className="h-8" />
     </div>
   );
 };

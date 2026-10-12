@@ -17,4 +17,3 @@ export * from './FinalizePanel';
 export * from './StandingsTable';
 export * from './TieBreakOrder';
 export * from './ResultView';
-export * from './GameControlStatusCard';

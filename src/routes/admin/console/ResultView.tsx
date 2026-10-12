@@ -5,7 +5,6 @@ import { useStandings } from '../../../data/useStandings';
 import { LeaderboardView, formatStandingsAsText, exportStandingsToCsv, LeaderboardEntry } from '../../../ui/Leaderboard';
 import { ActivityLog } from './ActivityLog';
 import { ConsoleTopBar } from './ConsoleTopBar';
-import { GameControlStatusCard } from './GameControlStatusCard';
 import { ConnectionStatus } from '../../../ui/ConnectionPill';
 import { PixelButton, useToast } from '../../../ui';
 
@@ -98,15 +97,8 @@ export const ResultView: React.FC<ResultViewProps> = ({
 
       {/* 3. MAIN FINALIZED BODY */}
       <main className="flex-1 w-full max-w-[1700px] mx-auto p-3 sm:p-4 lg:p-6 flex flex-col xl:flex-row gap-5">
-        {/* Left & Center: Game Control Status Card, Official Leaderboard & Podium */}
+        {/* Left & Center: Official Leaderboard & Podium */}
         <div className="flex-1 flex flex-col gap-5 min-w-0">
-          <GameControlStatusCard
-            roomCode={snapshot.room.code}
-            status="FINALIZED"
-            lifecycleState="completed"
-            endsAt={snapshot.room.ends_at}
-            serverNow={snapshot.server_now}
-          />
           <LeaderboardView
             standings={leaderboardEntries}
             roomCode={snapshot.room.code}

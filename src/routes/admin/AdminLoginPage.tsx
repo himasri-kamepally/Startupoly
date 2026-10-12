@@ -6,7 +6,7 @@ import {
   CastleBackground,
   WoodenSignboard,
   WoodenActionButton,
-  AdminPatrolCharacter,
+  RoamingCharacter,
 } from '../../ui/pixel';
 import { ErrorBanner } from '../../ui';
 
@@ -160,9 +160,13 @@ export const AdminLoginPage: React.FC = () => {
           </form>
         </WoodenSignboard>
 
-        {/* Pixel Mascot Poly Continuously Patrols Across The Ground */}
-        <div className="absolute bottom-0 inset-x-0 pointer-events-none z-30">
-          <AdminPatrolCharacter size={48} hasPlatform={false} />
+        {/* Pixel Mascot Poly Patrols The Ground (Mobile & Desktop) */}
+        <div className="absolute bottom-0 right-4 sm:right-16 md:right-28 pointer-events-none">
+          <RoamingCharacter
+            size={52}
+            bubbleText={isSuccess ? 'Open Sesame!' : 'Admin Area'}
+            isCheering={isSuccess}
+          />
         </div>
       </main>
     </CastleBackground>

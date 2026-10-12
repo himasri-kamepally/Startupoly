@@ -20,9 +20,6 @@ import {
   rpcAdminRemoveBusiness,
   rpcAdminSetBankrupt,
   rpcAdminAbortGame,
-  rpcAdminPauseGame,
-  rpcAdminResumeGame,
-  rpcAdminEndGame,
 } from '../../../data/rpc';
 import {
   QuickActionsBar,
@@ -35,9 +32,6 @@ import {
 } from './quick';
 import { FinalizePanel } from './FinalizePanel';
 import { ResultView } from './ResultView';
-import { GameControlStatusCard } from './GameControlStatusCard';
-import { TurnControlAndResolution } from './TurnControlAndResolution';
-import { LiveTeamOverview } from './LiveTeamOverview';
 
 export interface AdminConsoleViewProps {
   snapshot: AdminRoomSnapshot;
@@ -108,55 +102,10 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
   const [abortNote, setAbortNote] = useState<string>('');
   const [abortError, setAbortError] = useState<string | null>(null);
 
-  // Pause / Resume / End Game state
-  const [isActionLoading, setIsActionLoading] = useState<boolean>(false);
-  const [showEndModal, setShowEndModal] = useState<boolean>(false);
-  const [endNote, setEndNote] = useState<string>('');
-
   const handleOpenAbort = () => {
     setAbortNote('');
     setAbortError(null);
     setShowAbortModal(true);
-  };
-
-  const handlePauseGame = async () => {
-    try {
-      setIsActionLoading(true);
-      await rpcAdminPauseGame(snapshot.room.id);
-      successToast('Match PAUSED. Game timer frozen.');
-      await onRefetch();
-    } catch (err: any) {
-      errorToast(err.message || 'Failed to pause game.');
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  const handleResumeGame = async () => {
-    try {
-      setIsActionLoading(true);
-      await rpcAdminResumeGame(snapshot.room.id);
-      successToast('Match RESUMED. Game timer is active.');
-      await onRefetch();
-    } catch (err: any) {
-      errorToast(err.message || 'Failed to resume game.');
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  const handleConfirmEndGame = async () => {
-    try {
-      setIsActionLoading(true);
-      await rpcAdminEndGame(snapshot.room.id, endNote);
-      successToast('Match CONCLUDED. Scores are frozen.');
-      setShowEndModal(false);
-      await onRefetch();
-    } catch (err: any) {
-      errorToast(err.message || 'Failed to end game.');
-    } finally {
-      setIsActionLoading(false);
-    }
   };
 
   // Ensure selectedTeamId is always valid even if teams change
@@ -552,20 +501,13 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
   if (!selectedTeam) return null;
 
   return (
-    <div
-      className="flex flex-col min-h-screen bg-gradient-to-b from-[#0B1224] via-[#0F1B38] to-[#141A2E] text-white"
-      style={{
-        backgroundImage: 'radial-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px)',
-        backgroundSize: '16px 16px',
-      }}
-    >
+    <div className="flex flex-col min-h-screen bg-[#5C94FC] text-[#102040]">
       {/* 1. TOP BAR */}
       <ConsoleTopBar
         roomCode={snapshot.room.code}
         status={snapshot.room.status}
         endsAt={snapshot.room.ends_at}
         serverNow={snapshot.server_now}
-        durationSeconds={snapshot.room.duration_seconds}
         connection={connection}
         lastUpdated={lastUpdated}
         onRefetch={handleManualRefetch}
@@ -652,45 +594,8 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
 
       {/* 3. MAIN DESKTOP CONSOLE BODY */}
       <main className="flex-1 w-full max-w-[1700px] mx-auto p-3 sm:p-4 lg:p-6 flex flex-col xl:flex-row gap-5">
-        {/* Left & Center: Game Control Status Card, Team Grid and Selected Team Editor */}
+        {/* Left & Center: Team Grid and Selected Team Editor */}
         <div className="flex-1 flex flex-col gap-5 min-w-0">
-          {/* Prominent Game Control Status Card */}
-          <GameControlStatusCard
-            roomCode={snapshot.room.code}
-            status={snapshot.room.status}
-            lifecycleState={snapshot.room.lifecycle_state}
-            endsAt={snapshot.room.ends_at}
-            serverNow={snapshot.server_now}
-            durationSeconds={snapshot.room.duration_seconds}
-            activeTeamName={selectedTeam.name}
-            activeTeamSlot={selectedTeam.slot}
-            activeTeamColor={selectedTeam.color}
-            onPauseGame={handlePauseGame}
-            onResumeGame={handleResumeGame}
-            onEndGame={() => setShowEndModal(true)}
-            onAbortGame={handleOpenAbort}
-            isActionLoading={isActionLoading}
-          />
-
-          {/* 2 & 3. Turn Control and Landing Resolution Panel */}
-          <TurnControlAndResolution
-            snapshot={snapshot}
-            selectedTeamId={selectedTeam.id}
-            onSelectTeam={(id) => {
-              setSelectedTeamId(id);
-              setInsufficientCashShortfall(null);
-            }}
-            disabled={isEditDisabled}
-            isTimeExpired={isTimeExpired}
-            onRefetch={onRefetch}
-            onOpenForcedSale={(teamId, shortfall) => {
-              setForcedSaleTeamId(teamId);
-              setForcedSaleShortfall(shortfall);
-              setIsForcedSaleOpen(true);
-            }}
-            onOpenBankruptModal={(mode) => setBankruptMode(mode)}
-          />
-
           {isTimeExpired && (
             <FinalizePanel
               roomId={snapshot.room.id}
@@ -702,17 +607,6 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
 
           <TeamGrid
             teams={snapshot.teams}
-            selectedTeamId={selectedTeam.id}
-            onSelectTeam={(id) => {
-              setSelectedTeamId(id);
-              setInsufficientCashShortfall(null);
-            }}
-            flashes={flashes}
-          />
-
-          {/* 4. Live Team Overview Table */}
-          <LiveTeamOverview
-            snapshot={snapshot}
             selectedTeamId={selectedTeam.id}
             onSelectTeam={(id) => {
               setSelectedTeamId(id);
@@ -968,47 +862,6 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
           <p className="font-mono text-xs text-[#64748B]">
             Use this if the match was started by mistake. You can start again from the lobby once ready.
           </p>
-        </div>
-      </Modal>
-
-      {/* End Match Confirmation Modal */}
-      <Modal
-        isOpen={showEndModal}
-        title="END MATCH EARLY"
-        onClose={() => setShowEndModal(false)}
-      >
-        <div className="flex flex-col gap-3">
-          <p className="font-mono text-sm leading-relaxed text-[#102040]">
-            Are you sure you want to end the match for Room <strong>{snapshot.room.code}</strong> early?
-          </p>
-          <div className="bg-[#FEF2F2] border-2 border-[#102040] p-3 text-xs text-[#991B1B] font-mono">
-            ⚠ This will immediately freeze all team scores, conclude the live countdown clock, and open the audit & tiebreak finalization panel.
-          </div>
-          <div>
-            <label className="font-pixel text-[10px] text-[#102040] block mb-1 uppercase">
-              Reason / Admin Note (Optional):
-            </label>
-            <input
-              type="text"
-              value={endNote}
-              onChange={(e) => setEndNote(e.target.value)}
-              placeholder="e.g. Completed all board rounds early"
-              className="w-full border-2 border-[#102040] p-2 font-mono text-xs text-[#102040]"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2 pt-2 border-t-2 border-[#102040]">
-            <PixelButton variant="ghost" size="sm" onClick={() => setShowEndModal(false)}>
-              CANCEL
-            </PixelButton>
-            <PixelButton
-              variant="danger"
-              size="sm"
-              onClick={handleConfirmEndGame}
-              disabled={isActionLoading}
-            >
-              {isActionLoading ? 'ENDING MATCH…' : 'CONFIRM END GAME'}
-            </PixelButton>
-          </div>
         </div>
       </Modal>
 
