@@ -32,9 +32,9 @@ export const AdminRoomPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden bg-[#5C94FC] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#5C94FC] flex flex-col justify-between overflow-x-hidden">
       {/* Top Navbar */}
-      <header className="bg-[#102040] text-white border-b-4 border-[#102040] px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-3 shadow-[0_4px_0px_#102040] select-none shrink-0">
+      <header className="bg-[#102040] text-white border-b-4 border-[#102040] px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-3 shadow-[0_4px_0px_#102040] select-none shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <Link
             to="/admin"
@@ -81,7 +81,7 @@ export const AdminRoomPage: React.FC = () => {
       </div>
 
       {/* Main Room Lifecycle Body */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-4 md:p-5 flex flex-col gap-3 min-h-0 overflow-y-auto lg:overflow-visible">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-2.5 sm:p-3 md:p-4 flex flex-col gap-2 sm:gap-2.5 min-h-0">
         {status === 'loading' && (
           <div className="flex flex-col gap-4">
             <PixelCard title="LOADING TOURNAMENT ROOM..." headerBg="navy">

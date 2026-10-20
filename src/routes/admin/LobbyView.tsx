@@ -78,24 +78,24 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
   };
 
   return (
-    <div className="flex flex-col gap-3 min-h-0">
-      {/* Projector Hero Card - Balanced and Compact */}
+    <div className="flex flex-col gap-2.5 sm:gap-3 min-h-0">
+      {/* Projector Hero Card - Balanced, Compact & Non-Intrusive */}
       <PixelCard
         title="LIVE TOURNAMENT LOBBY • PROJECTOR VIEW"
         headerBg="navy"
         variant="cream"
-        padding="md"
+        padding="sm"
         className="text-center shadow-[4px_4px_0px_#102040] shrink-0"
       >
-        <div className="flex flex-col items-center justify-center gap-1.5 py-1">
-          <span className="font-pixel text-[10px] sm:text-xs uppercase tracking-widest text-[#102040] font-bold">
+        <div className="flex flex-col items-center justify-center gap-1 py-0.5">
+          <span className="font-pixel text-[9px] sm:text-[10px] uppercase tracking-widest text-[#102040] font-bold">
             ROOM CODE TO JOIN ON PHONES
           </span>
 
           {/* Balanced room code with neatly aligned copy button */}
-          <div className="my-1 flex flex-col sm:flex-row items-stretch justify-center gap-2.5 w-full max-w-lg mx-auto">
-            <div className="bg-[#FFCC00] border-4 border-[#102040] shadow-[3px_3px_0px_#102040] px-5 sm:px-8 py-2 sm:py-2.5 flex items-center justify-center flex-1">
-              <span className="font-mono text-3xl sm:text-4xl md:text-5xl font-black tracking-[0.25em] text-[#102040] select-all leading-none">
+          <div className="my-0.5 flex flex-row items-center justify-center gap-2 sm:gap-3 w-full max-w-md mx-auto">
+            <div className="bg-[#FFCC00] border-3 sm:border-4 border-[#102040] shadow-[2px_2px_0px_#102040] px-4 sm:px-6 py-1 sm:py-1.5 flex items-center justify-center">
+              <span className="font-mono text-2xl sm:text-3xl md:text-4xl font-black tracking-[0.2em] text-[#102040] select-all leading-none">
                 {room.code}
               </span>
             </div>
@@ -103,25 +103,25 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
               type="button"
               onClick={handleCopyCode}
               aria-label="Copy room code"
-              className="font-pixel text-xs sm:text-sm bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-4 py-2 sm:py-2.5 border-4 border-[#102040] shadow-[3px_3px_0px_#102040] font-bold flex items-center justify-center gap-2 transition-transform active:translate-y-0.5 cursor-pointer select-none shrink-0"
+              className="font-pixel text-[10px] sm:text-xs bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-3 sm:px-4 py-2 sm:py-2.5 border-3 sm:border-4 border-[#102040] shadow-[2px_2px_0px_#102040] font-bold flex items-center justify-center gap-1.5 transition-transform active:translate-y-0.5 cursor-pointer select-none shrink-0"
             >
               <span>{copied ? '✓ COPIED!' : '📋 COPY CODE'}</span>
             </button>
           </div>
 
-          <p className="font-mono text-xs text-[#102040] font-semibold">
-            Players navigate to <strong className="underline font-bold">/join</strong> on their phone, enter the code above, select their slot, and input their PIN.
+          <p className="font-mono text-[11px] sm:text-xs text-[#102040] font-medium leading-tight">
+            Players navigate to <strong className="underline font-bold">/join</strong> on phone, enter the code above, select their slot, and input their PIN.
           </p>
         </div>
 
         {/* Live Joined Tracker Bar */}
-        <div className="mt-2.5 pt-2.5 border-t-2 border-[#102040] flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-start">
-            <span className="font-pixel text-xs text-[#102040] font-bold">
+        <div className="mt-1.5 pt-1.5 border-t-2 border-[#102040] flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+            <span className="font-pixel text-[10px] sm:text-xs text-[#102040] font-bold">
               STATUS:
             </span>
             <span
-              className={`font-pixel text-xs px-3 py-1 border-2 border-[#102040] shadow-[2px_2px_0px_#102040] ${
+              className={`font-pixel text-[10px] sm:text-xs px-2.5 py-0.5 sm:py-1 border-2 border-[#102040] shadow-[2px_2px_0px_#102040] ${
                 allJoined
                   ? 'bg-[#DCFCE7] text-[#166534]'
                   : joinedTeams.length > 0
@@ -135,9 +135,9 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
 
           <PixelButton
             variant={allJoined ? 'primary' : noTeamsJoined ? 'ghost' : 'secondary'}
-            size="md"
+            size="sm"
             onClick={() => setShowStartModal(true)}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto text-xs py-1"
           >
             {allJoined ? 'START GAME (50:00)' : 'START GAME...'}
           </PixelButton>
@@ -151,29 +151,29 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
         padding="sm"
         className="min-h-0 flex-1 flex flex-col"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[360px] lg:max-h-[330px] overflow-y-auto pr-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
           {teams.map((team) => {
             const isConnected = team.claimed;
             return (
               <div
                 key={team.id}
                 className={`
-                  border-3 p-2.5 sm:p-3 shadow-[3px_3px_0px_#102040] flex flex-col justify-between gap-2 transition-all
+                  border-3 p-2 sm:p-2.5 shadow-[2px_2px_0px_#102040] flex flex-col justify-between gap-1.5 transition-all
                   ${
                     isConnected
-                      ? 'bg-[#F0FDF4] border-[#16A34A] shadow-[3px_3px_0px_#166534]'
+                      ? 'bg-[#F0FDF4] border-[#16A34A] shadow-[2px_2px_0px_#166534]'
                       : 'bg-white border-[#102040]'
                   }
                 `}
               >
                 {/* Header: Slot & Connection Pill */}
-                <div className="flex items-center justify-between border-b-2 border-[#102040] pb-1.5">
+                <div className="flex items-center justify-between border-b-2 border-[#102040] pb-1">
                   <div className="flex items-center gap-1.5">
                     <span
-                      className="w-3.5 h-3.5 border-2 border-[#102040] shadow-[1px_1px_0px_#102040]"
+                      className="w-3 h-3 border-2 border-[#102040] shadow-[1px_1px_0px_#102040]"
                       style={{ backgroundColor: team.color }}
                     />
-                    <span className="font-pixel text-[11px] sm:text-xs text-[#102040] font-bold">
+                    <span className="font-pixel text-[10px] sm:text-[11px] text-[#102040] font-bold">
                       SLOT #{team.slot}
                     </span>
                   </div>
@@ -187,18 +187,18 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
 
                 {/* Team Name */}
                 <div>
-                  <h3 className="font-pixel text-xs sm:text-sm text-[#102040] truncate">
+                  <h3 className="font-pixel text-xs sm:text-sm text-[#102040] truncate" title={team.name}>
                     {team.name}
                   </h3>
                 </div>
 
                 {/* PIN and Release Action */}
-                <div className="bg-[#FAF8F5] border-2 border-[#102040] px-2.5 py-1.5 flex items-center justify-between">
-                  <div>
-                    <span className="font-pixel text-[8px] text-[#102040] font-bold block uppercase">
-                      SECRET PIN:
+                <div className="bg-[#FAF8F5] border-2 border-[#102040] px-2 py-1 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-pixel text-[8px] text-[#64748B] font-bold uppercase">
+                      PIN:
                     </span>
-                    <span className="font-mono font-extrabold text-base sm:text-lg text-[#102040] tracking-widest leading-tight">
+                    <span className="font-mono font-extrabold text-sm sm:text-base text-[#102040] tracking-widest leading-none">
                       {team.pin || '••••'}
                     </span>
                   </div>
@@ -208,7 +208,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
                       variant="danger"
                       size="sm"
                       onClick={() => setReleasingTeam(team)}
-                      className="text-[9px] min-h-[30px] py-0.5 px-2.5"
+                      className="text-[9px] min-h-[24px] py-0.5 px-2"
                       title="Disconnect this team's device"
                     >
                       RELEASE

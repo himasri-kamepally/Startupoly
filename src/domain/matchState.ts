@@ -125,16 +125,40 @@ export function clearMatchState(roomId: string): void {
 }
 
 export function clearAllLocalMatchStates(): void {
-  if (typeof window === 'undefined' || !window.localStorage) return;
+  if (typeof window === 'undefined') return;
   try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i);
-      if (key && (key.startsWith(STORAGE_PREFIX) || key === 'startupoly_guest_auth')) {
-        keysToRemove.push(key);
+    if (window.localStorage) {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i);
+        if (
+          key &&
+          (key.startsWith(STORAGE_PREFIX) ||
+            key.startsWith('startupoly_match') ||
+            key.startsWith('startupoly_room') ||
+            key === 'startupoly_guest_auth')
+        ) {
+          keysToRemove.push(key);
+        }
       }
+      keysToRemove.forEach((k) => window.localStorage.removeItem(k));
     }
-    keysToRemove.forEach((k) => window.localStorage.removeItem(k));
+
+    if (window.sessionStorage) {
+      const sessionKeysToRemove: string[] = [];
+      for (let i = 0; i < window.sessionStorage.length; i++) {
+        const key = window.sessionStorage.key(i);
+        if (
+          key &&
+          (key.startsWith(STORAGE_PREFIX) ||
+            key.startsWith('startupoly_match') ||
+            key.startsWith('startupoly_room'))
+        ) {
+          sessionKeysToRemove.push(key);
+        }
+      }
+      sessionKeysToRemove.forEach((k) => window.sessionStorage.removeItem(k));
+    }
   } catch (err) {
     console.warn('Failed to clear local match states:', err);
   }

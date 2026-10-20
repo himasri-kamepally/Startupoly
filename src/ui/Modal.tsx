@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export const Modal: React.FC<ModalProps> = ({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
   const maxWidthStyles = {
     sm: 'max-w-sm',
@@ -46,11 +48,12 @@ export const Modal: React.FC<ModalProps> = ({
     xl: 'max-w-2xl',
   };
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-100"
+      aria-label={title}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-100"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -59,8 +62,8 @@ export const Modal: React.FC<ModalProps> = ({
         ref={modalRef}
         className={`
           w-full ${maxWidthStyles[maxWidth]} max-w-[calc(100vw-24px)] bg-[#FAF8F5]
-          border-4 border-[#102040] shadow-[6px_6px_0px_#102040]
-          flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden my-auto
+          border-4 border-[#102040] shadow-[8px_8px_0px_rgba(0,0,0,0.6)]
+          flex flex-col max-h-[85vh] sm:max-h-[88vh] overflow-hidden
         `}
       >
         {/* Modal Header */}
@@ -71,7 +74,7 @@ export const Modal: React.FC<ModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center bg-[#D32F2F] text-white font-pixel text-xs border-2 border-white hover:bg-[#B71C1C] cursor-pointer active:translate-y-0.5"
+            className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center bg-[#D32F2F] text-white font-pixel text-xs border-2 border-white hover:bg-[#B71C1C] cursor-pointer active:translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFCC00]"
           >
             ✕
           </button>
@@ -91,4 +94,6 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
