@@ -1,12 +1,22 @@
 import { createClient, Session } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!rawSupabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — copy .env.example to .env.local');
 }
+
+// In local browser development, route through Vite proxy to bypass ISP DNS hijacking
+const isLocalBrowser =
+  import.meta.env.DEV &&
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+export const supabaseUrl = isLocalBrowser
+  ? `${window.location.origin}/supabase-proxy`
+  : rawSupabaseUrl;
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -21,19 +31,103 @@ export type ResolveRoleResult =
   | { role: UserRole; verified: true; error?: never }
   | { role: null; verified: false; error: Error };
 
-/**
- * Ensures an anonymous session exists for player phones.
- */
-export async function ensureAnonymousSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      throw error;
+const GUEST_STORAGE_KEY = 'startupoly_guest_auth';
+
+async function ensureDeviceGuestSession(): Promise<Session> {
+  let storedCreds: { email: string; pass: string } | null = null;
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(GUEST_STORAGE_KEY) : null;
+    if (raw) storedCreds = JSON.parse(raw);
+  } catch {
+    // Ignore parse error
+  }
+
+  if (storedCreds?.email && storedCreds?.pass) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: storedCreds.email,
+        password: storedCreds.pass,
+      });
+      if (!error && data.session) {
+        return data.session;
+      }
+    } catch {
+      // Continue to recreate if sign-in fails
     }
+  }
+
+  const deviceId =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().replace(/-/g, '').slice(0, 16)
+      : Math.random().toString(36).slice(2, 14);
+  const email = `startupoly.player.${deviceId}@gmail.com`;
+  const pass = `GuestPass_${deviceId}!2026`;
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: pass,
+  });
+
+  if (error) {
+    const signInRes = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (signInRes.data?.session) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify({ email, pass }));
+      }
+      return signInRes.data.session;
+    }
+    throw error;
+  }
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify({ email, pass }));
+  }
+
+  if (data.session) {
     return data.session;
   }
-  return session;
+
+  const signInRes = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (signInRes.data?.session) {
+    return signInRes.data.session;
+  }
+  throw new Error('Could not establish player session.');
+}
+
+/**
+ * Ensures an anonymous or guest session exists for player phones.
+ * Automatically falls back to device guest credentials if anonymous
+ * provider is disabled in Supabase project auth settings.
+ */
+export async function ensureAnonymousSession(): Promise<Session> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    return session;
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) {
+      if (
+        (error as any).code === 'anonymous_provider_disabled' ||
+        (error as any).status === 422 ||
+        error.message?.includes('disabled')
+      ) {
+        return await ensureDeviceGuestSession();
+      }
+      throw error;
+    }
+    return data.session!;
+  } catch (err: any) {
+    if (
+      err?.code === 'anonymous_provider_disabled' ||
+      err?.status === 422 ||
+      err?.message?.includes('disabled')
+    ) {
+      return await ensureDeviceGuestSession();
+    }
+    throw err;
+  }
 }
 
 /**
@@ -50,8 +144,8 @@ export async function resolveRole(session: Session | null): Promise<ResolveRoleR
     return { role: 'none', verified: true };
   }
 
-  // Anonymous users are always team players; skip RPC
-  if (session.user.is_anonymous) {
+  // Anonymous users or device guest accounts are always team players; skip RPC
+  if (session.user.is_anonymous || session.user.email?.startsWith('startupoly.player.')) {
     return { role: 'team', verified: true };
   }
 
@@ -60,15 +154,12 @@ export async function resolveRole(session: Session | null): Promise<ResolveRoleR
     if (error) {
       return { role: null, verified: false, error: new Error(error.message) };
     }
-    if (isAdmin === true) {
-      return { role: 'admin', verified: true };
-    }
-    return { role: 'team', verified: true };
-  } catch (err: any) {
+    return { role: isAdmin ? 'admin' : 'team', verified: true };
+  } catch (err) {
     return {
       role: null,
       verified: false,
-      error: err instanceof Error ? err : new Error(String(err)),
+      error: err instanceof Error ? err : new Error('Unknown error checking role'),
     };
   }
 }

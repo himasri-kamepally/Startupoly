@@ -74,10 +74,44 @@ export const FinalizePanel: React.FC<FinalizePanelProps> = ({
 
   return (
     <div className="bg-[#FAF8F5] border-4 border-[#102040] shadow-[4px_4px_0px_#102040] p-4 flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-[#102040] pb-3">
+      {/* 1. Guided Resolution Flow Banner */}
+      <div className="bg-[#102040] text-white p-3 border-2 border-[#102040] flex flex-col gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/20 pb-1.5">
+          <span className="font-pixel text-xs text-[#FFCC00] uppercase tracking-wider font-bold">
+            🏁 POST-MATCH RESOLUTION FLOW (GUIDED)
+          </span>
+          <span className="font-mono text-[11px] text-[#94A3B8]">
+            Official Rulebook §17 Adjudication
+          </span>
+        </div>
+
+        {/* 3 Steps Visual Checklist */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-mono">
+          <div className="bg-[#162952] p-2 border border-white/20">
+            <span className="font-pixel text-[9px] text-[#FFCC00] block uppercase">STEP 1: SCORES FROZEN</span>
+            <span className="text-white/80">Timer at 00:00. Player phones locked. Make any physical board adjustments below.</span>
+          </div>
+
+          <div className={`p-2 border ${hasUnresolvedTie ? 'bg-[#78350F] border-[#FFCC00] text-white animate-pulse' : 'bg-[#162952] border-white/20 text-white/80'}`}>
+            <span className="font-pixel text-[9px] text-[#FFCC00] block uppercase">STEP 2: RESOLVE TIEBREAKS</span>
+            {hasUnresolvedTie ? (
+              <strong className="text-[#FEF08A]">⚠ Tie detected! Game Master must judge 30s pitch.</strong>
+            ) : (
+              <span>✓ Tiebreak criteria verified (CV → Cash → Businesses).</span>
+            )}
+          </div>
+
+          <div className="bg-[#162952] p-2 border border-white/20">
+            <span className="font-pixel text-[9px] text-[#FFCC00] block uppercase">STEP 3: FINALIZE PODIUM</span>
+            <span className="text-white/80">Lock immutable tournament standings and project final winner podium.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Header & Finalize Match Action Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-[#102040] pb-3">
         <div>
-          <span className="font-pixel text-[10px] text-[#D32F2F] uppercase tracking-wider block">
+          <span className="font-pixel text-[10px] text-[#D32F2F] uppercase tracking-wider block font-bold">
             MATCH CONCLUSION & AUDIT RECONCILIATION
           </span>
           <h2 className="font-pixel text-sm sm:text-base text-[#102040] uppercase">
@@ -85,25 +119,38 @@ export const FinalizePanel: React.FC<FinalizePanelProps> = ({
           </h2>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           {hasUnresolvedTie ? (
-            <span className="font-pixel text-[10px] bg-[#FEF3C7] text-[#B45309] border border-[#B45309] px-2.5 py-1 animate-pulse">
+            <span className="font-pixel text-[10px] bg-[#FEF3C7] text-[#B45309] border-2 border-[#B45309] px-2.5 py-1.5 animate-pulse font-bold shadow-[1px_1px_0px_#B45309]">
               ⚠ TIEBREAK REQUIRED BEFORE FINALIZING
             </span>
           ) : (
-            <span className="font-pixel text-[10px] bg-[#E8F8EE] text-[#22B14C] border border-[#22B14C] px-2.5 py-1">
+            <span className="font-pixel text-[10px] bg-[#E8F8EE] text-[#166534] border-2 border-[#22B14C] px-2.5 py-1.5 font-bold shadow-[1px_1px_0px_#22B14C]">
               ✓ ALL TIES RESOLVED
             </span>
           )}
 
-          <PixelButton
-            variant="danger"
-            size="sm"
-            disabled={hasUnresolvedTie || isFinalizing || isOffline || isLoading}
-            onClick={() => setIsFinalizeModalOpen(true)}
-          >
-            FINALIZE MATCH
-          </PixelButton>
+          <div className="flex flex-col items-end">
+            <PixelButton
+              variant="danger"
+              size="md"
+              disabled={hasUnresolvedTie || isFinalizing || isOffline || isLoading}
+              onClick={() => setIsFinalizeModalOpen(true)}
+              className="min-h-[44px]"
+            >
+              FINALIZE MATCH
+            </PixelButton>
+            {hasUnresolvedTie && (
+              <span className="font-mono text-[10px] text-[#D32F2F] font-bold mt-1 text-right">
+                Disabled: Complete pitch tie-break below
+              </span>
+            )}
+            {isOffline && (
+              <span className="font-mono text-[10px] text-[#D32F2F] font-bold mt-1 text-right">
+                Disabled: Reconnect to internet
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

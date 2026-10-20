@@ -14,7 +14,7 @@ export const LobbyWaitView: React.FC<LobbyWaitViewProps> = ({ state }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Waiting Banner Card */}
-      <PixelCard title="LOBBY CONNECTED" headerBg="green" padding="lg">
+      <PixelCard title="LOBBY CONNECTED • WAITING ROOM" headerBg="green" padding="lg">
         <div className="flex flex-col items-center text-center gap-3 py-4">
           <div className="relative">
             <PixelCloud size={72} className="opacity-90 anim-cloud-float" />
@@ -23,12 +23,23 @@ export const LobbyWaitView: React.FC<LobbyWaitViewProps> = ({ state }) => {
             </div>
           </div>
 
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {state.room?.code && (
+              <span className="font-mono font-black text-xs sm:text-sm bg-[#FFCC00] text-[#102040] border-2 border-[#102040] px-2.5 py-0.5 shadow-[1px_1px_0px_#102040]">
+                ROOM {state.room.code}
+              </span>
+            )}
+            <span className="font-pixel text-[10px] bg-[#DCFCE7] text-[#166534] border-2 border-[#166534] px-2.5 py-0.5 font-bold shadow-[1px_1px_0px_#166534]">
+              ● CONNECTED
+            </span>
+          </div>
+
           <h2 className="font-pixel text-sm sm:text-base text-[#102040] uppercase">
-            YOU'RE IN! WAITING FOR MATCH TO START
+            WAITING FOR THE ADMIN TO START THE GAME
           </h2>
 
           <p className="font-mono text-xs text-[#64748B] max-w-xs leading-relaxed">
-            Your phone is synced with the scoreboard. Keep this screen open; the 50-minute game clock and live financials will start automatically when the organizer launches the game.
+            Your phone is connected and synced with the scoreboard. Teams cannot start the match themselves. The 50-minute gameplay timer will begin automatically when the admin presses "Start Game."
           </p>
 
           <div className="mt-2 inline-flex items-center gap-2 bg-[#FAF8F5] border-2 border-[#102040] px-3 py-1.5 shadow-[2px_2px_0px_#102040]">

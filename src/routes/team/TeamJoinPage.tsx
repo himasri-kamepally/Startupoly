@@ -9,7 +9,7 @@ import {
   PixelCoin,
 } from '../../ui/pixel';
 import { ErrorBanner, useToast, Skeleton } from '../../ui';
-import { rpcGetLobby, rpcJoinTeam } from '../../data/rpc';
+import { rpcGetLobby, rpcJoinTeam, rpcGetMyState } from '../../data/rpc';
 import { ensureAnonymousSession } from '../../data/client';
 import { isNetworkError } from '../../lib/errors';
 
@@ -38,6 +38,30 @@ export const TeamJoinPage: React.FC = () => {
   // Check if redirected with notice (e.g., organizer released slot)
   const redirectNotice = (location.state as { notice?: string })?.notice;
 
+  // Restore existing team connection on mount/refresh if claimed in an active match
+  React.useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const myState = await rpcGetMyState();
+        if (
+          isMounted &&
+          myState &&
+          myState.room &&
+          myState.room.status !== 'FINALIZED' &&
+          !redirectNotice
+        ) {
+          navigate('/team', { replace: true });
+        }
+      } catch {
+        // Not claimed, stay on join page
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, redirectNotice]);
+
   // Safe alphabet filter (no 0, 1, I, O)
   const handleRoomCodeChange = (raw: string) => {
     const cleaned = raw.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, '').slice(0, 6);
@@ -60,12 +84,23 @@ export const TeamJoinPage: React.FC = () => {
       const data = await rpcGetLobby(code);
       setLobbyTeams(data.teams);
       if (data.teams.length > 0 && selectedSlot === null) {
-        setSelectedSlot(data.teams[0].slot);
+        const firstUnclaimed = data.teams.find((t) => !t.claimed);
+        setSelectedSlot(firstUnclaimed ? firstUnclaimed.slot : data.teams[0].slot);
       }
-    } catch (err) {
-      const message = isNetworkError(err)
-        ? 'Unable to reach the match server. Check your connection and try again.'
-        : "Code, team or PIN didn't match";
+      if (data.status === 'ACTIVE') {
+        setErrorMessage('Match is currently in progress. Enter your team PIN to connect.');
+      } else if (data.teams.length > 0 && data.teams.every((t) => t.claimed)) {
+        setErrorMessage('All team slots in this room have already been claimed.');
+      }
+    } catch (err: any) {
+      let message = "Code, team or PIN didn't match";
+      if (err?.code === 'ROOM_NOT_FOUND') {
+        message = 'Room not found. Check the 6-character room code.';
+      } else if (err?.code === 'ROOM_CLOSED') {
+        message = 'This match room has ended and is closed.';
+      } else if (isNetworkError(err)) {
+        message = 'Unable to reach the match server. Check your connection and try again.';
+      }
       setErrorMessage(message);
       setLobbyTeams([]);
       setSelectedSlot(null);
@@ -78,7 +113,7 @@ export const TeamJoinPage: React.FC = () => {
     e.preventDefault();
 
     if (roomCode.length !== 6) {
-      setErrorMessage("Code, team or PIN didn't match");
+      setErrorMessage("Please enter a valid 6-character room code.");
       return;
     }
 
@@ -96,7 +131,7 @@ export const TeamJoinPage: React.FC = () => {
       setIsJoining(true);
       setErrorMessage(null);
 
-      // Ensure anonymous session exists so auth.uid() is populated in Postgres
+      // Ensure anonymous/guest session exists so auth.uid() is populated in Postgres
       await ensureAnonymousSession();
 
       // Call join_team RPC
@@ -115,6 +150,12 @@ export const TeamJoinPage: React.FC = () => {
         message = 'Too many tries — wait a minute';
       } else if (err.code === 'TEAM_ALREADY_CLAIMED') {
         message = 'This team is already connected. Ask the organiser to release it before rejoining.';
+      } else if (err.code === 'BAD_PIN' || err.code === 'BAD_CODE_OR_PIN') {
+        message = "Code, team or PIN didn't match";
+      } else if (err.code === 'ROOM_NOT_FOUND') {
+        message = 'Room not found. Check the 6-character room code.';
+      } else if (err.code === 'ROOM_CLOSED') {
+        message = 'This match room has ended and is closed.';
       } else if (isNetworkError(err)) {
         message = 'Unable to reach the match server. Check your connection and try again.';
       }

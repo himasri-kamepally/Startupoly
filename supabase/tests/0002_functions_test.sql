@@ -5,7 +5,7 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS pgtap;
 
-SELECT plan(31);
+SELECT plan(32);
 
 -- Set test environment and simulated clock
 SELECT set_config('app.env', 'test', true);
@@ -104,11 +104,10 @@ SELECT set_config('request.jwt.claims', '{"sub": "b0000000-0000-0000-0000-000000
 SET LOCAL ROLE authenticated;
 
 -- Wrong PIN gives BAD_CODE_OR_PIN
-SELECT throws_ok(
-  format('SELECT public.join_team(%L, 1, %L)', current_setting('app.test_room_code'), '0000'),
-  'P0001',
+SELECT is(
+  public.join_team(current_setting('app.test_room_code'), 1, '0000')->>'error',
   'BAD_CODE_OR_PIN',
-  'Wrong PIN fails with BAD_CODE_OR_PIN'
+  'Wrong PIN returns BAD_CODE_OR_PIN (committed so the throttle can count it)'
 );
 
 -- 9. Correct PIN joins successfully
@@ -131,9 +130,14 @@ SELECT is(
 );
 
 SELECT is(
-  (SELECT public.get_my_state()->>'leaderboard'),
+  (SELECT public.get_my_state()->>'final_result'),
   NULL,
-  'get_my_state returns null leaderboard prior to FINALIZED'
+  'get_my_state returns null final_result prior to FINALIZED'
+);
+
+SELECT ok(
+  (SELECT (public.get_my_state() ? 'leaderboard') IS FALSE),
+  'get_my_state has no leaderboard property'
 );
 
 -- 12. Starting game without all teams joined fails unless force=true

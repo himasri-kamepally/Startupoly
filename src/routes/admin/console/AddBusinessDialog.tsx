@@ -158,25 +158,79 @@ export const AddBusinessDialog: React.FC<AddBusinessDialogProps> = ({
           </div>
         </div>
 
-        {/* Apply Purchase Financial Side-Effect Checkbox */}
+        {/* Review & Impact Step before committing */}
         {selectedBiz && (
-          <div className="bg-[#FAF8F5] border-2 border-[#102040] p-3 flex flex-col gap-2">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={applyPurchase}
-                onChange={(e) => setApplyPurchase(e.target.checked)}
-                className="w-4 h-4 accent-[#22B14C] cursor-pointer"
-              />
-              <span className="font-sans text-xs font-bold text-[#102040]">
-                Apply purchase (−₹{selectedBiz.cost.toLocaleString('en-IN')}, +{selectedBiz.initial_cv.toLocaleString('en-IN')} CV)
+          <div className="bg-[#FAF8F5] border-2 border-[#102040] p-3 shadow-[2px_2px_0px_#102040] flex flex-col gap-2.5">
+            <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-1.5">
+              <span className="font-pixel text-[10px] text-[#102040] font-bold uppercase">
+                ACQUISITION REVIEW & IMPACT
               </span>
-            </label>
-            <p className="font-mono text-[11px] text-[#64748B] pl-6">
-              {applyPurchase
-                ? `Will deduct ₹${selectedBiz.cost} from team cash and credit ₹${selectedBiz.initial_cv} to CV.`
-                : 'Manual entry only: does not modify team cash or CV.'}
-            </p>
+              <span className="font-mono text-xs text-[#64748B]">
+                Team: <strong className="text-[#102040]">#{team.slot} {team.name}</strong>
+              </span>
+            </div>
+
+            {/* Impact stats grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-xs">
+              <div className="bg-white p-2 border border-[#CBD5E1]">
+                <span className="text-[10px] text-[#64748B] block font-pixel uppercase">CASH IMPACT</span>
+                {applyPurchase ? (
+                  <div>
+                    <span className="text-[#64748B]">₹{team.cash} → </span>
+                    <strong className="text-[#22B14C]">₹{team.cash - selectedBiz.cost}</strong>
+                    <span className="text-[#D32F2F] text-[10px] ml-1 font-bold">(−₹{selectedBiz.cost})</span>
+                  </div>
+                ) : (
+                  <span className="text-[#64748B] italic">No cash change (manual)</span>
+                )}
+              </div>
+
+              <div className="bg-white p-2 border border-[#CBD5E1]">
+                <span className="text-[10px] text-[#64748B] block font-pixel uppercase">CV IMPACT</span>
+                {applyPurchase ? (
+                  <div>
+                    <span className="text-[#64748B]">₹{team.cv} → </span>
+                    <strong className="text-[#1E40AF]">₹{team.cv + selectedBiz.initial_cv}</strong>
+                    <span className="text-[#22B14C] text-[10px] ml-1 font-bold">(+₹{selectedBiz.initial_cv})</span>
+                  </div>
+                ) : (
+                  <span className="text-[#64748B] italic">No CV change (manual)</span>
+                )}
+              </div>
+
+              <div className="bg-white p-2 border border-[#CBD5E1]">
+                <span className="text-[10px] text-[#64748B] block font-pixel uppercase">PORTFOLIO CAP</span>
+                <strong className="text-[#102040]">{team.businesses.length} → {team.businesses.length + 1} / 3 owned</strong>
+              </div>
+            </div>
+
+            {/* Shortfall warning check */}
+            {applyPurchase && team.cash < selectedBiz.cost && (
+              <div className="bg-[#FEECEB] border border-[#D32F2F] p-2 text-xs font-mono text-[#D32F2F] font-bold">
+                ⚠ Cash Shortfall: Team only has ₹{team.cash}, but {selectedBiz.name} costs ₹{selectedBiz.cost}.
+                Attempting purchase will trigger an INSUFFICIENT_CASH rulebook shortfall.
+              </div>
+            )}
+
+            {/* Apply Purchase Financial Checkbox */}
+            <div className="pt-1 flex flex-col gap-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={applyPurchase}
+                  onChange={(e) => setApplyPurchase(e.target.checked)}
+                  className="w-4 h-4 accent-[#22B14C] cursor-pointer"
+                />
+                <span className="font-sans text-xs font-bold text-[#102040]">
+                  Apply purchase (−₹{selectedBiz.cost.toLocaleString('en-IN')}, +{selectedBiz.initial_cv.toLocaleString('en-IN')} CV)
+                </span>
+              </label>
+              <p className="font-mono text-[11px] text-[#64748B] pl-6">
+                {applyPurchase
+                  ? `Will deduct ₹${selectedBiz.cost} from team cash and credit ₹${selectedBiz.initial_cv} to CV.`
+                  : 'Manual entry only: does not modify team cash or CV.'}
+              </p>
+            </div>
           </div>
         )}
 

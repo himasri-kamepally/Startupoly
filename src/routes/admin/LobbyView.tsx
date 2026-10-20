@@ -17,8 +17,22 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
   // Start game modal state
   const [showStartModal, setShowStartModal] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { successToast, errorToast } = useToast();
+
+  const handleCopyCode = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(room.code);
+        setCopied(true);
+        successToast(`Room code ${room.code} copied to clipboard!`);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // Fallback
+    }
+  };
 
   const joinedTeams = teams.filter((t) => t.claimed);
   const unjoinedTeams = teams.filter((t) => !t.claimed);
@@ -72,11 +86,21 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
             ROOM CODE TO JOIN ON PHONES
           </span>
 
-          {/* Huge 3-meter readable room code */}
-          <div className="my-2 bg-[#FFCC00] border-4 border-[#102040] shadow-[6px_6px_0px_#102040] px-8 py-4 sm:py-6 inline-block">
-            <span className="font-mono text-5xl sm:text-7xl lg:text-8xl font-black tracking-[0.25em] text-[#102040] select-all">
-              {room.code}
-            </span>
+          {/* Huge 3-meter readable room code with copy button */}
+          <div className="my-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="bg-[#FFCC00] border-4 border-[#102040] shadow-[6px_6px_0px_#102040] px-8 py-4 sm:py-6 inline-block">
+              <span className="font-mono text-5xl sm:text-7xl lg:text-8xl font-black tracking-[0.25em] text-[#102040] select-all">
+                {room.code}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              aria-label="Copy room code"
+              className="font-pixel text-xs bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-4 py-3 border-3 border-[#102040] shadow-[3px_3px_0px_#102040] font-bold flex items-center gap-2 transition-transform active:translate-y-0.5 cursor-pointer"
+            >
+              <span>{copied ? '✓ COPIED!' : '📋 COPY CODE'}</span>
+            </button>
           </div>
 
           <p className="font-mono text-xs sm:text-sm text-[#102040] font-semibold mt-1">

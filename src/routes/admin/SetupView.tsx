@@ -17,11 +17,24 @@ export const SetupView: React.FC<SetupViewProps> = ({ snapshot, onRefetch }) => 
   const [draftColor, setDraftColor] = useState('');
   const [isSavingTeam, setIsSavingTeam] = useState(false);
 
-  // Modal for Open Lobby confirmation
   const [showOpenLobbyModal, setShowOpenLobbyModal] = useState(false);
   const [isOpeningLobby, setIsOpeningLobby] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { successToast, errorToast } = useToast();
+
+  const handleCopyCode = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(room.code);
+        setCopied(true);
+        successToast(`Room code ${room.code} copied!`);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // Fallback
+    }
+  };
 
   const handleStartEdit = (team: (typeof teams)[0]) => {
     setEditingTeamId(team.id);
@@ -73,11 +86,19 @@ export const SetupView: React.FC<SetupViewProps> = ({ snapshot, onRefetch }) => 
       <PixelCard title="ROOM INITIALIZED • PRE-LOBBY SETUP" headerBg="navy" padding="md">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="font-pixel text-xs text-[#102040]">ROOM CODE:</span>
-              <span className="font-mono font-bold text-sm bg-[#FFCC00] px-2 py-0.5 border border-[#102040]">
+              <span className="font-mono font-bold text-sm bg-[#FFCC00] text-[#102040] px-2.5 py-0.5 border-2 border-[#102040] shadow-[1px_1px_0px_#102040]">
                 {room.code}
               </span>
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                aria-label="Copy room code"
+                className="font-pixel text-[10px] bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-2 py-0.5 border border-[#102040] shadow-[1px_1px_0px_#102040] font-bold cursor-pointer transition-transform active:translate-y-0.5"
+              >
+                {copied ? '✓ COPIED!' : '📋 COPY'}
+              </button>
               <span className="font-mono text-xs text-[#64748B]">
                 ({room.team_count} Teams)
               </span>

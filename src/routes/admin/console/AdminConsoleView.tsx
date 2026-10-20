@@ -20,7 +20,10 @@ import {
   rpcAdminRemoveBusiness,
   rpcAdminSetBankrupt,
   rpcAdminAbortGame,
+  rpcAdminExtendGame,
 } from '../../../data/rpc';
+import { PitchTimerModal } from './PitchTimerModal';
+import { WildcardModal } from './WildcardModal';
 import {
   QuickActionsBar,
   RentDialog,
@@ -106,6 +109,25 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
     setAbortNote('');
     setAbortError(null);
     setShowAbortModal(true);
+  };
+
+  // Pitch Timer & Wildcard Modals
+  const [isPitchTimerOpen, setIsPitchTimerOpen] = useState<boolean>(false);
+  const [isWildcardOpen, setIsWildcardOpen] = useState<boolean>(false);
+  const [isExtending, setIsExtending] = useState<boolean>(false);
+
+  const handleExtendGame = async (seconds = 600) => {
+    if (isExtending || isOffline) return;
+    setIsExtending(true);
+    try {
+      await rpcAdminExtendGame(snapshot.room.id, seconds);
+      successToast(`Added ${Math.round(seconds / 60)} minutes extra time!`);
+      await onRefetch();
+    } catch (err: any) {
+      errorToast(err.message || 'Failed to extend game time.');
+    } finally {
+      setIsExtending(false);
+    }
   };
 
   // Ensure selectedTeamId is always valid even if teams change
@@ -513,6 +535,10 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
         onRefetch={handleManualRefetch}
         isRefetching={isRefetching}
         onAbortGame={isActive ? handleOpenAbort : undefined}
+        onExtendGame={handleExtendGame}
+        isExtending={isExtending}
+        onOpenPitchTimer={() => setIsPitchTimerOpen(true)}
+        onOpenWildcard={() => setIsWildcardOpen(true)}
       />
 
       {/* Responsive width notice for small devices (< 1024px) */}
@@ -560,8 +586,13 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
       )}
 
       {isTimeExpired && (
-        <div className="bg-[#FFCC00] text-[#102040] px-4 py-2 text-center font-pixel text-xs border-b-4 border-[#102040] shadow-[0_2px_0px_#102040]">
-          ⚠ GAME OVER — scores frozen. Post-match corrections require a mandatory note.
+        <div className="bg-[#FFCC00] text-[#102040] px-4 py-3 text-center border-b-4 border-[#102040] shadow-[0_4px_0px_#102040] flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span className="font-pixel text-xs sm:text-sm font-black flex items-center gap-2">
+            <span>⏱</span> ⚠ GAME OVER — scores frozen. Post-match corrections require a mandatory note.
+          </span>
+          <span className="font-mono text-xs text-[#102040] bg-white/70 px-2 py-0.5 border border-[#102040] font-bold">
+            Audit window active: Verify final standings & pitch tiebreaks below
+          </span>
         </div>
       )}
 
@@ -865,7 +896,20 @@ export const AdminConsoleView: React.FC<AdminConsoleViewProps> = ({
         </div>
       </Modal>
 
-      {/* 5. NES Ground Pattern */}
+      {/* 5. Utility Game Modals */}
+      <PitchTimerModal
+        isOpen={isPitchTimerOpen}
+        onClose={() => setIsPitchTimerOpen(false)}
+        teamName={selectedTeam?.name}
+      />
+
+      <WildcardModal
+        isOpen={isWildcardOpen}
+        onClose={() => setIsWildcardOpen(false)}
+        teamName={selectedTeam?.name}
+      />
+
+      {/* 6. NES Ground Pattern */}
       <div className="h-8 nes-brick-pattern border-t-4 border-[#102040]" />
     </div>
   );

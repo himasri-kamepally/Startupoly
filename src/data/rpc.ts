@@ -1,5 +1,6 @@
 import { supabase } from './client';
-import { parseRpcError, isNetworkError, isBusinessError } from '../lib/errors';
+import { AppError, parseRpcError, isNetworkError, isBusinessError, classifyRpcError } from '../lib/errors';
+import { intentKey, intentRequestId, settleIntent } from '../lib/intent';
 import { Database, Json } from './database.types';
 import { logger } from '../lib/logger';
 
@@ -46,6 +47,29 @@ async function callRpc<T>(fnName: FunctionName, args?: Record<string, unknown>, 
   }
 }
 
+// Mutations carry one request_id per user intent (see lib/intent.ts): a retry of the same action replays on the
+// server instead of applying twice, and callRpc may then retry a dropped response safely.
+async function mutate<T>(fnName: FunctionName, args: Record<string, unknown>): Promise<T> {
+  const { request_id: given, ...identity } = args;
+  if (typeof given === 'string') return callRpc<T>(fnName, args);
+  const key = intentKey(fnName, identity);
+  try {
+    const result = await callRpc<T>(fnName, { ...args, request_id: intentRequestId(key) });
+    settleIntent(key);
+    return result;
+  } catch (err) {
+    if (classifyRpcError(err) !== 'OUTCOME_UNKNOWN') {
+      settleIntent(key);
+      throw err;
+    }
+    // Keep the intent open: a retry of the same action reuses the request_id and replays if it did commit.
+    throw new AppError(
+      'OUTCOME_UNKNOWN',
+      'Connection lost. This may or may not have been saved. Check the latest values before repeating it.',
+    );
+  }
+}
+
 // 1. Core / Public
 export async function rpcServerTime(): Promise<string> {
   return callRpc<string>('server_time');
@@ -61,12 +85,17 @@ export async function rpcGetLobby(code: string) {
 }
 
 export async function rpcJoinTeam(code: string, slot: number, pin: string) {
-  return callRpc<{ team_id: string; room_id: string }>('join_team', { code, slot, pin });
+  // join_team returns {error} for failed attempts so attempt commits to Postgres
+  const res = await callRpc<{ team_id?: string; room_id?: string; error?: string }>('join_team', { code, slot, pin });
+  if (res.error) throw new AppError(res.error);
+  return res as { team_id: string; room_id: string };
 }
 
 export async function rpcGetMyState() {
   return callRpc<{
     room: {
+      id?: string;
+      code?: string;
       status: string;
       lifecycle_state?: string;
       started_at: string | null;
@@ -83,7 +112,7 @@ export async function rpcGetMyState() {
       initial_cv: number;
       cv_contribution: number;
     }>;
-    leaderboard: Array<{
+    leaderboard?: Array<{
       rank: number;
       name: string;
       color: string;
@@ -92,6 +121,13 @@ export async function rpcGetMyState() {
       business_count: number;
       is_bankrupt: boolean;
     }> | null;
+    final_result?: {
+      rank: number;
+      cv: number;
+      cash: number;
+      business_count: number;
+      is_bankrupt: boolean;
+    } | null;
   } | null>('get_my_state');
 }
 
@@ -105,7 +141,7 @@ export async function rpcAdminUpdateTeamConfig(team_id: string, name: string, co
 }
 
 export async function rpcAdminOpenLobby(room_id: string) {
-  return callRpc<any>('admin_open_lobby', { room_id });
+  return mutate<any>('admin_open_lobby', { room_id });
 }
 
 export async function rpcAdminReleaseTeam(team_id: string) {
@@ -113,7 +149,7 @@ export async function rpcAdminReleaseTeam(team_id: string) {
 }
 
 export async function rpcAdminStartGame(room_id: string, force = false) {
-  return callRpc<any>('admin_start_game', { room_id, force });
+  return mutate<any>('admin_start_game', { room_id, force });
 }
 
 export async function rpcAdminPauseGame(room_id: string) {
@@ -129,7 +165,16 @@ export async function rpcAdminEndGame(room_id: string, note?: string) {
 }
 
 export async function rpcAdminAbortGame(room_id: string, note: string) {
-  return callRpc<any>('admin_abort_game', { room_id, note });
+  return mutate<any>('admin_abort_game', { p_room_id: room_id, note });
+}
+
+export async function rpcAdminExtendGame(room_id: string, additional_seconds = 600) {
+  return mutate<{
+    room_id: string;
+    status: string;
+    ends_at: string;
+    duration_seconds: number;
+  }>('admin_extend_game', { p_room_id: room_id, p_additional_seconds: additional_seconds });
 }
 
 // 4. Admin Edits
@@ -141,7 +186,7 @@ export async function rpcAdminSetTeamValues(params: {
   request_id?: string;
   note?: string;
 }) {
-  return callRpc<any>('admin_set_team_values', params);
+  return mutate<any>('admin_set_team_values', params);
 }
 
 export async function rpcAdminAdjust(params: {
@@ -150,7 +195,7 @@ export async function rpcAdminAdjust(params: {
   note?: string;
   request_id?: string;
 }) {
-  return callRpc<any>('admin_adjust', {
+  return mutate<any>('admin_adjust', {
     changes: params.changes as unknown as Json,
     label: params.label,
     note: params.note,
@@ -166,7 +211,7 @@ export async function rpcAdminAddBusiness(params: {
   request_id?: string;
   note?: string;
 }) {
-  return callRpc<any>('admin_add_business', params);
+  return mutate<any>('admin_add_business', params);
 }
 
 export async function rpcAdminSetBusinessLevel(params: {
@@ -178,7 +223,7 @@ export async function rpcAdminSetBusinessLevel(params: {
   request_id?: string;
   note?: string;
 }) {
-  return callRpc<any>('admin_set_business_level', params);
+  return mutate<any>('admin_set_business_level', params);
 }
 
 export async function rpcAdminRemoveBusiness(params: {
@@ -190,7 +235,7 @@ export async function rpcAdminRemoveBusiness(params: {
   request_id?: string;
   note?: string;
 }) {
-  return callRpc<any>('admin_remove_business', params);
+  return mutate<any>('admin_remove_business', params);
 }
 
 export async function rpcAdminSetBankrupt(params: {
@@ -200,7 +245,7 @@ export async function rpcAdminSetBankrupt(params: {
   request_id?: string;
   note?: string;
 }) {
-  return callRpc<any>('admin_set_bankrupt', params);
+  return mutate<any>('admin_set_bankrupt', params);
 }
 
 export async function rpcAdminSetTiebreak(room_id: string, ordered_team_ids: string[], note?: string) {
@@ -323,11 +368,16 @@ export async function rpcGetStandings(room_id: string): Promise<StandingsRespons
 }
 
 export async function rpcAdminFinalize(room_id: string) {
-  return callRpc<{
+  return mutate<{
     room_id: string;
     winner_team_id: string | null;
     standings: StandingsRow[];
   }>('admin_finalize', { p_room_id: room_id });
+}
+
+/** Current room status straight from the server (used to settle lifecycle calls whose outcome is unclear). */
+export async function rpcRoomStatus(room_id: string): Promise<string> {
+  return (await rpcGetAdminSnapshot(room_id)).room.status;
 }
 
 export async function rpcListHistory(): Promise<HistoryRoomSummary[]> {

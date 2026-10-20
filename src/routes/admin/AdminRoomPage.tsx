@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAdminRoom } from '../../data/useAdminRoom';
-import { PixelCard, StatusPill, ConnectionPill, ErrorBanner, Skeleton, PixelBrickTile } from '../../ui';
+import { PixelCard, ConnectionPill, ErrorBanner, Skeleton, PixelBrickTile } from '../../ui';
 import { SetupView } from './SetupView';
 import { LobbyView } from './LobbyView';
 import { ActiveSummaryView } from './ActiveSummaryView';
@@ -34,25 +34,36 @@ export const AdminRoomPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#5C94FC] flex flex-col justify-between">
       {/* Top Navbar */}
-      <header className="bg-[#102040] text-white border-b-4 border-[#102040] px-4 py-3 flex items-center justify-between shadow-[0_4px_0px_#102040]">
+      <header className="bg-[#102040] text-white border-b-4 border-[#102040] px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-[0_4px_0px_#102040]">
         <div className="flex items-center gap-3">
           <Link
             to="/admin"
-            className="font-pixel text-xs text-[#FFCC00] hover:underline flex items-center gap-1"
+            className="font-pixel text-xs text-[#FFCC00] hover:underline flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFCC00]"
           >
             ◄ CONSOLE
           </Link>
-          <span className="font-pixel text-xs text-white border-l-2 border-white/20 pl-3">
-            ROOM {snapshot?.room.code || roomId?.slice(0, 6).toUpperCase()}
-          </span>
+          <div className="border-l-2 border-white/20 pl-3 flex items-center gap-2">
+            <div className="bg-[#FFCC00] text-[#102040] px-2.5 py-1 border-2 border-[#102040] shadow-[2px_2px_0px_rgba(0,0,0,0.4)] font-pixel text-xs font-bold">
+              ROOM {snapshot?.room.code || roomId?.slice(0, 6).toUpperCase()}
+            </div>
+            {snapshot && (
+              <span className="font-pixel text-[10px] bg-[#3B82F6] text-white px-2 py-1 border border-white/30 uppercase">
+                {snapshot.room.status === 'CREATED' ? '⚙ PRE-LOBBY SETUP' : snapshot.room.status === 'LOBBY' ? '📱 LOBBY (PLAYERS JOINING)' : snapshot.room.status}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
           <span className="hidden sm:inline font-mono text-[11px] text-[#94A3B8]">
             Updated: {lastUpdated}
           </span>
-          <ConnectionPill status={connection} />
-          {snapshot && <StatusPill status={snapshot.room.status} size="sm" />}
+          <div className="flex items-center gap-1.5">
+            <span className="hidden sm:inline font-pixel text-[8px] text-[#94A3B8] uppercase">
+              ROOM SYNC:
+            </span>
+            <ConnectionPill status={connection} />
+          </div>
         </div>
       </header>
 
