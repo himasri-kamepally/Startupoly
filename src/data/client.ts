@@ -1,8 +1,10 @@
 import { createClient, Session } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
-const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : (process.env as any) || {};
+
+const rawSupabaseUrl = env.VITE_SUPABASE_URL;
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY;
 
 if (!rawSupabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — copy .env.example to .env.local');
@@ -10,7 +12,7 @@ if (!rawSupabaseUrl || !supabaseAnonKey) {
 
 // In local browser development, route through Vite proxy to bypass ISP DNS hijacking
 const isLocalBrowser =
-  import.meta.env.DEV &&
+  Boolean(env.DEV) &&
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
@@ -113,7 +115,15 @@ export async function ensureAnonymousSession(): Promise<Session> {
         (error as any).status === 422 ||
         error.message?.includes('disabled')
       ) {
-        return await ensureDeviceGuestSession();
+        try {
+          return await ensureDeviceGuestSession();
+        } catch {
+          const authError: any = new Error(
+            'Anonymous sign-ins are disabled in Supabase. Enable "Anonymous sign-ins" in your Supabase Dashboard under Authentication -> Providers.'
+          );
+          authError.code = 'ANONYMOUS_AUTH_DISABLED';
+          throw authError;
+        }
       }
       throw error;
     }
@@ -124,7 +134,15 @@ export async function ensureAnonymousSession(): Promise<Session> {
       err?.status === 422 ||
       err?.message?.includes('disabled')
     ) {
-      return await ensureDeviceGuestSession();
+      try {
+        return await ensureDeviceGuestSession();
+      } catch {
+        const authError: any = new Error(
+          'Anonymous sign-ins are disabled in Supabase. Enable "Anonymous sign-ins" in your Supabase Dashboard under Authentication -> Providers.'
+        );
+        authError.code = 'ANONYMOUS_AUTH_DISABLED';
+        throw authError;
+      }
     }
     throw err;
   }

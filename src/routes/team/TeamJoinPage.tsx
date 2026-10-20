@@ -156,6 +156,8 @@ export const TeamJoinPage: React.FC = () => {
         message = 'Room not found. Check the 6-character room code.';
       } else if (err.code === 'ROOM_CLOSED') {
         message = 'This match room has ended and is closed.';
+      } else if (err.code === 'ANONYMOUS_AUTH_DISABLED') {
+        message = err.message || 'Anonymous sign-ins are disabled in Supabase. Enable "Anonymous sign-ins" in your Supabase Dashboard under Authentication -> Providers.';
       } else if (isNetworkError(err)) {
         message = 'Unable to reach the match server. Check your connection and try again.';
       }

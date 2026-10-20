@@ -29,6 +29,7 @@ export function useAdminRoom(roomId: string | undefined): UseAdminRoomResult {
   const maxWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef<boolean>(true);
   const latestRequestIdRef = useRef<number>(0);
+  const roomStatusRef = useRef<string | null>(null);
 
   // Core fetcher with monotonic request counter to discard out-of-order responses
   const fetchSnapshot = useCallback(async () => {
@@ -45,6 +46,7 @@ export function useAdminRoom(roomId: string | undefined): UseAdminRoomResult {
         return;
       }
 
+      roomStatusRef.current = data.room.status;
       setSnapshot(data);
       setStatus('ready');
       setError(null);
@@ -127,12 +129,19 @@ export function useAdminRoom(roomId: string | undefined): UseAdminRoomResult {
       },
     });
 
-    // 3. Fallback polling: every 10s while tab is visible, pause when hidden
+    // 3. Fallback polling: responsive 2s in LOBBY so phone joins appear immediately, 10s otherwise
+    let lastPollTime = Date.now();
     const pollInterval = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible' && isMountedRef.current) {
-        fetchSnapshot();
+        const isLobby = !roomStatusRef.current || roomStatusRef.current === 'LOBBY';
+        const now = Date.now();
+        const intervalRequired = isLobby ? 2000 : 10000;
+        if (now - lastPollTime >= intervalRequired) {
+          lastPollTime = now;
+          fetchSnapshot();
+        }
       }
-    }, 10000);
+    }, 1000);
 
     // 4. Immediate refetch on tab visibility change to visible
     const handleVisibilityChange = () => {

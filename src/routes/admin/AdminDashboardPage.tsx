@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../data/auth';
 import { supabase } from '../../data/client';
-import { PixelButton, PixelBrickTile, Modal, PixelLoader, ErrorBanner } from '../../ui';
+import { PixelButton, PixelBrickTile, Modal, PixelLoader, ErrorBanner, StatusPill } from '../../ui';
 import { CreateRoomView } from './CreateRoomView';
+
+interface ActiveRoomInfo {
+  id: string;
+  code: string;
+  status: string;
+  team_count: number;
+}
 
 export const AdminDashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
   const [checkingActiveRoom, setCheckingActiveRoom] = useState(true);
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [activeRoom, setActiveRoom] = useState<ActiveRoomInfo | null>(null);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [roomCheckError, setRoomCheckError] = useState<string | null>(null);
   const [checkAttempt, setCheckAttempt] = useState(0);
@@ -19,7 +26,7 @@ export const AdminDashboardPage: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('rooms')
-          .select('id, status')
+          .select('id, code, status, team_count')
           .neq('status', 'FINALIZED')
           .order('created_at', { ascending: false })
           .limit(1)
@@ -28,8 +35,8 @@ export const AdminDashboardPage: React.FC = () => {
         if (error) {
           throw error;
         }
-        if (data?.id && isMounted) {
-          setActiveRoomId(data.id);
+        if (data && isMounted) {
+          setActiveRoom(data as ActiveRoomInfo);
         }
       } catch (err) {
         console.warn('Failed to check active room:', err);
@@ -51,11 +58,6 @@ export const AdminDashboardPage: React.FC = () => {
 
   if (checkingActiveRoom) {
     return <PixelLoader label="CHECKING MATCH STATE..." delayMs={0} />;
-  }
-
-  // If a non-finalized room already exists, redirect directly to its control console
-  if (activeRoomId) {
-    return <Navigate to={`/admin/room/${activeRoomId}`} replace />;
   }
 
   return (
@@ -91,7 +93,7 @@ export const AdminDashboardPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Main Container: Create Room View */}
+      {/* Main Container: Active Room Card & Create Room View */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
         {roomCheckError ? (
           <ErrorBanner
@@ -103,7 +105,41 @@ export const AdminDashboardPage: React.FC = () => {
             }}
           />
         ) : (
-          <CreateRoomView />
+          <>
+            {activeRoom && (
+              <div className="bg-[#FAF8F5] border-4 border-[#102040] shadow-[6px_6px_0px_#102040] p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-pixel text-[10px] bg-[#FFCC00] text-[#102040] px-2 py-0.5 border border-[#102040] font-bold">
+                        ACTIVE TOURNAMENT ROOM
+                      </span>
+                      <StatusPill
+                        status={activeRoom.status}
+                        size="sm"
+                        pulse={activeRoom.status === 'LOBBY' || activeRoom.status === 'ACTIVE'}
+                      />
+                    </div>
+                    <h2 className="font-pixel text-lg sm:text-xl text-[#102040]">
+                      ROOM CODE: <span className="font-mono text-xl sm:text-2xl text-[#E52521] tracking-wider font-extrabold">{activeRoom.code}</span>
+                    </h2>
+                    <p className="font-mono text-xs text-[#64748B] font-semibold">
+                      {activeRoom.team_count} Teams • State: {activeRoom.status === 'LOBBY' ? 'Lobby (Waiting for phone players)' : activeRoom.status}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Link to={`/admin/room/${activeRoom.id}`} className="w-full sm:w-auto">
+                      <PixelButton variant="primary" size="lg" className="w-full sm:w-auto">
+                        ► RESUME ROOM CONSOLE
+                      </PixelButton>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+            <CreateRoomView />
+          </>
         )}
       </main>
 

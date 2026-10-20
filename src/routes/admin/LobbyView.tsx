@@ -37,6 +37,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
   const joinedTeams = teams.filter((t) => t.claimed);
   const unjoinedTeams = teams.filter((t) => !t.claimed);
   const allJoined = unjoinedTeams.length === 0;
+  const noTeamsJoined = joinedTeams.length === 0;
 
   const handleRelease = async () => {
     if (!releasingTeam) return;
@@ -54,6 +55,11 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
   };
 
   const handleStartGame = async (force: boolean) => {
+    if (noTeamsJoined) {
+      errorToast('Cannot start match: Players must join on their phones first.');
+      return;
+    }
+
     try {
       setIsStarting(true);
       await rpcAdminStartGame(room.id, force);
@@ -62,7 +68,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
       await onRefetch();
     } catch (err: any) {
       if (err.code === 'TEAMS_NOT_JOINED') {
-        errorToast('Some teams have not joined yet. Use Force Start to proceed.');
+        errorToast('Some teams have not joined yet. Connect all teams or force start.');
       } else {
         errorToast(err.message || 'Failed to start game.');
       }
@@ -72,24 +78,24 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-12">
       {/* 3-Meter Projector Hero Card */}
       <PixelCard
         title="LIVE TOURNAMENT LOBBY • PROJECTOR VIEW"
         headerBg="navy"
         variant="cream"
         padding="lg"
-        className="text-center"
+        className="text-center shadow-[6px_6px_0px_#102040]"
       >
-        <div className="flex flex-col items-center justify-center gap-2 py-4">
+        <div className="flex flex-col items-center justify-center gap-3 py-3">
           <span className="font-pixel text-xs sm:text-sm uppercase tracking-widest text-[#102040] font-bold">
             ROOM CODE TO JOIN ON PHONES
           </span>
 
-          {/* Huge 3-meter readable room code with copy button */}
-          <div className="my-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <div className="bg-[#FFCC00] border-4 border-[#102040] shadow-[6px_6px_0px_#102040] px-8 py-4 sm:py-6 inline-block">
-              <span className="font-mono text-5xl sm:text-7xl lg:text-8xl font-black tracking-[0.25em] text-[#102040] select-all">
+          {/* Huge 3-meter readable room code with neatly aligned copy button */}
+          <div className="my-2 flex flex-col sm:flex-row items-stretch justify-center gap-3 w-full max-w-2xl mx-auto">
+            <div className="bg-[#FFCC00] border-4 border-[#102040] shadow-[5px_5px_0px_#102040] px-6 sm:px-10 py-3 sm:py-5 flex items-center justify-center flex-1">
+              <span className="font-mono text-5xl sm:text-7xl lg:text-8xl font-black tracking-[0.25em] text-[#102040] select-all leading-none">
                 {room.code}
               </span>
             </div>
@@ -97,30 +103,38 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
               type="button"
               onClick={handleCopyCode}
               aria-label="Copy room code"
-              className="font-pixel text-xs bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-4 py-3 border-3 border-[#102040] shadow-[3px_3px_0px_#102040] font-bold flex items-center gap-2 transition-transform active:translate-y-0.5 cursor-pointer"
+              className="font-pixel text-xs sm:text-sm bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-5 py-4 border-4 border-[#102040] shadow-[5px_5px_0px_#102040] font-bold flex items-center justify-center gap-2 transition-transform active:translate-y-1 cursor-pointer select-none"
             >
               <span>{copied ? '✓ COPIED!' : '📋 COPY CODE'}</span>
             </button>
           </div>
 
           <p className="font-mono text-xs sm:text-sm text-[#102040] font-semibold mt-1">
-            Players navigate to <strong className="underline">/join</strong>, enter the code above, select their slot, and input their PIN
+            Players navigate to <strong className="underline font-bold">/join</strong> on their phone, enter the code above, select their slot, and input their PIN.
           </p>
         </div>
 
         {/* Live Joined Tracker Bar */}
-        <div className="mt-4 pt-4 border-t-3 border-[#102040] flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="font-pixel text-xs sm:text-sm text-[#102040]">
+        <div className="mt-4 pt-4 border-t-4 border-[#102040] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
+            <span className="font-pixel text-xs sm:text-sm text-[#102040] font-bold">
               STATUS:
             </span>
-            <span className={`font-pixel text-xs sm:text-sm px-3 py-1 border-2 border-[#102040] ${allJoined ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-[#FEF9C3] text-[#854D0E]'}`}>
+            <span
+              className={`font-pixel text-xs sm:text-sm px-3.5 py-1.5 border-2 border-[#102040] shadow-[2px_2px_0px_#102040] ${
+                allJoined
+                  ? 'bg-[#DCFCE7] text-[#166534]'
+                  : joinedTeams.length > 0
+                  ? 'bg-[#FEF9C3] text-[#854D0E]'
+                  : 'bg-[#F1F5F9] text-[#475569]'
+              }`}
+            >
               {joinedTeams.length} / {teams.length} TEAMS CONNECTED
             </span>
           </div>
 
           <PixelButton
-            variant={allJoined ? 'primary' : 'secondary'}
+            variant={allJoined ? 'primary' : noTeamsJoined ? 'ghost' : 'secondary'}
             size="lg"
             onClick={() => setShowStartModal(true)}
             className="w-full sm:w-auto"
@@ -133,65 +147,72 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
       {/* Team Cards Grid with PINs and Connection Status */}
       <PixelCard title="TEAM CONNECTIONS & SECRET PINS" headerBg="brick" padding="md">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {teams.map((team) => (
-            <div
-              key={team.id}
-              className={`
-                border-3 border-[#102040] p-4 shadow-[3px_3px_0px_#102040] flex flex-col justify-between gap-3
-                ${team.claimed ? 'bg-[#F0FDF4]' : 'bg-white'}
-              `}
-            >
-              {/* Header: Slot & Connection Pill */}
-              <div className="flex items-center justify-between border-b-2 border-[#102040] pb-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="w-4 h-4 border-2 border-[#102040] shadow-[1px_1px_0px_#102040]"
-                    style={{ backgroundColor: team.color }}
-                  />
-                  <span className="font-pixel text-xs text-[#102040]">
-                    SLOT #{team.slot}
-                  </span>
-                </div>
+          {teams.map((team) => {
+            const isConnected = team.claimed;
+            return (
+              <div
+                key={team.id}
+                className={`
+                  border-4 p-4 shadow-[4px_4px_0px_#102040] flex flex-col justify-between gap-3 min-h-[160px] transition-all
+                  ${
+                    isConnected
+                      ? 'bg-[#F0FDF4] border-[#16A34A] shadow-[4px_4px_0px_#166534]'
+                      : 'bg-white border-[#102040]'
+                  }
+                `}
+              >
+                {/* Header: Slot & Connection Pill */}
+                <div className="flex items-center justify-between border-b-2 border-[#102040] pb-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-4 h-4 border-2 border-[#102040] shadow-[1px_1px_0px_#102040]"
+                      style={{ backgroundColor: team.color }}
+                    />
+                    <span className="font-pixel text-xs text-[#102040] font-bold">
+                      SLOT #{team.slot}
+                    </span>
+                  </div>
 
-                <StatusPill
-                  status={team.claimed ? 'ACTIVE' : 'WAITING'}
-                  size="sm"
-                  pulse={!team.claimed}
-                />
-              </div>
-
-              {/* Team Name */}
-              <div>
-                <h3 className="font-pixel text-sm text-[#102040] truncate mb-1">
-                  {team.name}
-                </h3>
-              </div>
-
-              {/* PIN and Release Action */}
-              <div className="bg-[#FAF8F5] border-2 border-[#102040] p-2.5 flex items-center justify-between">
-                <div>
-                  <span className="font-pixel text-[9px] text-[#102040] font-bold block uppercase">
-                    SECRET PIN:
-                  </span>
-                  <span className="font-mono font-extrabold text-xl text-[#102040] tracking-widest">
-                    {team.pin || '••••'}
-                  </span>
-                </div>
-
-                {team.claimed && (
-                  <PixelButton
-                    variant="danger"
+                  <StatusPill
+                    status={isConnected ? 'CONNECTED' : 'WAITING'}
                     size="sm"
-                    onClick={() => setReleasingTeam(team)}
-                    className="text-[10px] min-h-[44px] py-1 px-3"
-                    title="Disconnect this team's device"
-                  >
-                    RELEASE
-                  </PixelButton>
-                )}
+                    pulse={!isConnected}
+                  />
+                </div>
+
+                {/* Team Name */}
+                <div>
+                  <h3 className="font-pixel text-sm text-[#102040] truncate mb-1">
+                    {team.name}
+                  </h3>
+                </div>
+
+                {/* PIN and Release Action */}
+                <div className="bg-[#FAF8F5] border-2 border-[#102040] p-2.5 flex items-center justify-between">
+                  <div>
+                    <span className="font-pixel text-[9px] text-[#102040] font-bold block uppercase">
+                      SECRET PIN:
+                    </span>
+                    <span className="font-mono font-extrabold text-xl text-[#102040] tracking-widest">
+                      {team.pin || '••••'}
+                    </span>
+                  </div>
+
+                  {isConnected && (
+                    <PixelButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setReleasingTeam(team)}
+                      className="text-[10px] min-h-[38px] py-1 px-3"
+                      title="Disconnect this team's device"
+                    >
+                      RELEASE
+                    </PixelButton>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </PixelCard>
 
@@ -222,7 +243,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
         }
       >
         {releasingTeam && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 text-center sm:text-left">
             <p className="font-mono text-sm leading-relaxed text-[#102040]">
               Are you sure you want to disconnect the active device for{' '}
               <strong>Slot #{releasingTeam.slot} ({releasingTeam.name})</strong>?
@@ -234,44 +255,83 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
         )}
       </Modal>
 
-      {/* Confirmation Modal to Start Game */}
+      {/* Modal to Start Game: Blocks when 0 teams, warns when partial, confirms when all */}
       <Modal
         isOpen={showStartModal}
         onClose={() => setShowStartModal(false)}
-        title={allJoined ? 'CONFIRM START GAME' : 'UNJOINED TEAMS WARNING'}
+        title={
+          noTeamsJoined
+            ? 'CANNOT START: NO TEAMS CONNECTED'
+            : allJoined
+            ? 'CONFIRM START GAME'
+            : 'UNJOINED TEAMS WARNING'
+        }
         footer={
-          <>
+          noTeamsJoined ? (
             <PixelButton
-              variant="ghost"
+              variant="primary"
               size="md"
               onClick={() => setShowStartModal(false)}
-              disabled={isStarting}
             >
-              CANCEL
+              UNDERSTOOD
             </PixelButton>
-            {allJoined ? (
+          ) : (
+            <>
               <PixelButton
-                variant="primary"
+                variant="ghost"
                 size="md"
-                onClick={() => handleStartGame(false)}
-                isLoading={isStarting}
+                onClick={() => setShowStartModal(false)}
+                disabled={isStarting}
               >
-                START 50:00 MATCH
+                CANCEL
               </PixelButton>
-            ) : (
-              <PixelButton
-                variant="danger"
-                size="md"
-                onClick={() => handleStartGame(true)}
-                isLoading={isStarting}
-              >
-                START ANYWAY (FORCE)
-              </PixelButton>
-            )}
-          </>
+              {allJoined ? (
+                <PixelButton
+                  variant="primary"
+                  size="md"
+                  onClick={() => handleStartGame(false)}
+                  isLoading={isStarting}
+                >
+                  START 50:00 MATCH
+                </PixelButton>
+              ) : (
+                <PixelButton
+                  variant="danger"
+                  size="md"
+                  onClick={() => handleStartGame(true)}
+                  isLoading={isStarting}
+                >
+                  START ANYWAY (FORCE)
+                </PixelButton>
+              )}
+            </>
+          )
         }
       >
-        {allJoined ? (
+        {noTeamsJoined ? (
+          <div className="flex flex-col items-center text-center gap-4 py-2">
+            <div className="w-14 h-14 bg-[#FEF2F2] border-3 border-[#102040] shadow-[3px_3px_0px_#102040] flex items-center justify-center text-2xl">
+              🚫
+            </div>
+            <div className="flex flex-col gap-2">
+              <h3 className="font-pixel text-sm sm:text-base text-[#991B1B]">
+                0 / {teams.length} TEAMS CONNECTED
+              </h3>
+              <p className="font-mono text-xs sm:text-sm leading-relaxed text-[#102040]">
+                Startupoly requires competing teams to connect their devices before starting the match.
+              </p>
+              <div className="bg-[#FFFBEB] border-2 border-[#102040] p-3 text-xs text-[#92400E] font-mono text-left mt-1">
+                <p className="font-bold mb-1">How players connect:</p>
+                <ol className="list-decimal pl-4 space-y-1">
+                  <li>Navigate to <strong className="underline">/join</strong> on phone</li>
+                  <li>Enter room code: <strong className="font-mono text-sm text-[#102040]">{room.code}</strong></li>
+                  <li>Select their team slot (1–{teams.length})</li>
+                  <li>Enter their slot's secret 4-digit PIN</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        ) : allJoined ? (
           <div className="flex flex-col gap-3">
             <p className="font-mono text-sm leading-relaxed text-[#102040]">
               All <strong>{teams.length} teams</strong> have connected their phones!
@@ -299,7 +359,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
             </div>
 
             <p className="font-mono text-xs text-[#64748B]">
-              You can wait for players to connect, or click <strong>Start anyway (Force)</strong> to begin immediately. Unconnected teams can still join later with their PIN.
+              You can wait for players to connect, or click <strong>Start anyway (Force)</strong> to begin. Unconnected teams can still join later with their PIN.
             </p>
           </div>
         )}

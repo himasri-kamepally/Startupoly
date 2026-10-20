@@ -9,6 +9,9 @@ export type StatusType =
   | 'FINALIZED'
   | 'BANKRUPT'
   | 'WAITING'
+  | 'CONNECTED'
+  | 'JOINED'
+  | 'DISCONNECTED'
   | 'NOT_STARTED'
   | 'RUNNING'
   | 'COMPLETED'
@@ -101,6 +104,24 @@ export const StatusPill: React.FC<StatusPillProps> = ({
       text: 'text-[#9A3412]',
       dot: 'bg-[#F97316]',
       label: 'WAITING',
+    },
+    CONNECTED: {
+      bg: 'bg-[#DCFCE7]',
+      text: 'text-[#166534]',
+      dot: 'bg-[#22C55E]',
+      label: 'CONNECTED',
+    },
+    JOINED: {
+      bg: 'bg-[#DCFCE7]',
+      text: 'text-[#166534]',
+      dot: 'bg-[#22C55E]',
+      label: 'JOINED',
+    },
+    DISCONNECTED: {
+      bg: 'bg-[#FEF2F2]',
+      text: 'text-[#991B1B]',
+      dot: 'bg-[#EF4444]',
+      label: 'DISCONNECTED',
     },
   };
 
