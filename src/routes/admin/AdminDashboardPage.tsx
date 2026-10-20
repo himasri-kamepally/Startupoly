@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../data/auth';
 import { supabase } from '../../data/client';
-import { PixelButton, PixelBrickTile, Modal, PixelLoader, ErrorBanner, StatusPill } from '../../ui';
+import { rpcAdminClearMatchData } from '../../data/rpc';
+import { clearAllLocalMatchStates } from '../../domain/matchState';
+import { PixelButton, PixelBrickTile, Modal, PixelLoader, ErrorBanner, StatusPill, useToast } from '../../ui';
 import { CreateRoomView } from './CreateRoomView';
 
 interface ActiveRoomInfo {
@@ -14,9 +16,12 @@ interface ActiveRoomInfo {
 
 export const AdminDashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
+  const { successToast, errorToast } = useToast();
   const [checkingActiveRoom, setCheckingActiveRoom] = useState(true);
   const [activeRoom, setActiveRoom] = useState<ActiveRoomInfo | null>(null);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [roomCheckError, setRoomCheckError] = useState<string | null>(null);
   const [checkAttempt, setCheckAttempt] = useState(0);
 
@@ -56,6 +61,22 @@ export const AdminDashboardPage: React.FC = () => {
     };
   }, [checkAttempt]);
 
+  const handleClearMatchData = async () => {
+    try {
+      setIsClearing(true);
+      await rpcAdminClearMatchData();
+      clearAllLocalMatchStates();
+      setActiveRoom(null);
+      setClearConfirmOpen(false);
+      successToast('Match data cleared and archived. You can now start a fresh tournament!');
+      setCheckAttempt((a) => a + 1);
+    } catch (err: any) {
+      errorToast(err.message || 'Failed to clear match data.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   if (checkingActiveRoom) {
     return <PixelLoader label="CHECKING MATCH STATE..." delayMs={0} />;
   }
@@ -71,10 +92,18 @@ export const AdminDashboardPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <span className="hidden md:inline font-mono text-xs text-[#94A3B8]">
             {user?.email}
           </span>
+          <PixelButton
+            variant="ghost"
+            size="sm"
+            onClick={() => setClearConfirmOpen(true)}
+            title="Clear all past matches to start fresh"
+          >
+            RESET MATCHES
+          </PixelButton>
           <Link to="/admin/history">
             <PixelButton variant="ghost" size="sm">
               HISTORY
@@ -173,6 +202,56 @@ export const AdminDashboardPage: React.FC = () => {
         <p className="font-mono text-sm text-nes-navy">
           Are you sure you want to log out of the admin console?
         </p>
+      </Modal>
+
+      {/* Clear Matches confirmation */}
+      <Modal
+        isOpen={clearConfirmOpen}
+        onClose={() => setClearConfirmOpen(false)}
+        title="START FRESH: CLEAR MATCH DATA"
+        maxWidth="md"
+        footer={
+          <>
+            <PixelButton
+              variant="ghost"
+              size="sm"
+              onClick={() => setClearConfirmOpen(false)}
+              disabled={isClearing}
+            >
+              CANCEL
+            </PixelButton>
+            <PixelButton
+              variant="danger"
+              size="sm"
+              onClick={handleClearMatchData}
+              isLoading={isClearing}
+            >
+              CLEAR & START FRESH
+            </PixelButton>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <p className="font-mono text-sm leading-relaxed text-[#102040]">
+            Are you sure you want to remove past match data and start fresh?
+          </p>
+          <div className="bg-[#FFFBEB] border-2 border-[#102040] p-3 text-xs text-[#92400E] font-mono flex flex-col gap-1.5">
+            <p className="font-bold">✓ Preserved Safely:</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>Admin user account ({user?.email}) & login credentials</li>
+              <li>Official Startupoly business catalog (10 companies)</li>
+              <li>Database tables, types, and security policies</li>
+            </ul>
+          </div>
+          <div className="bg-[#FEF2F2] border-2 border-[#102040] p-3 text-xs text-[#991B1B] font-mono flex flex-col gap-1.5">
+            <p className="font-bold">⚠ Cleared & Archived:</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>All existing match records are archived into the backup table</li>
+              <li>Old rooms, teams, cash, scores, and activity logs are deleted</li>
+              <li>Local browser match storage is cleared</li>
+            </ul>
+          </div>
+        </div>
       </Modal>
     </div>
   );

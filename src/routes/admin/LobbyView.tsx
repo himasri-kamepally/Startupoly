@@ -78,24 +78,24 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
-      {/* 3-Meter Projector Hero Card */}
+    <div className="flex flex-col gap-3 min-h-0">
+      {/* Projector Hero Card - Balanced and Compact */}
       <PixelCard
         title="LIVE TOURNAMENT LOBBY • PROJECTOR VIEW"
         headerBg="navy"
         variant="cream"
-        padding="lg"
-        className="text-center shadow-[6px_6px_0px_#102040]"
+        padding="md"
+        className="text-center shadow-[4px_4px_0px_#102040] shrink-0"
       >
-        <div className="flex flex-col items-center justify-center gap-3 py-3">
-          <span className="font-pixel text-xs sm:text-sm uppercase tracking-widest text-[#102040] font-bold">
+        <div className="flex flex-col items-center justify-center gap-1.5 py-1">
+          <span className="font-pixel text-[10px] sm:text-xs uppercase tracking-widest text-[#102040] font-bold">
             ROOM CODE TO JOIN ON PHONES
           </span>
 
-          {/* Huge 3-meter readable room code with neatly aligned copy button */}
-          <div className="my-2 flex flex-col sm:flex-row items-stretch justify-center gap-3 w-full max-w-2xl mx-auto">
-            <div className="bg-[#FFCC00] border-4 border-[#102040] shadow-[5px_5px_0px_#102040] px-6 sm:px-10 py-3 sm:py-5 flex items-center justify-center flex-1">
-              <span className="font-mono text-5xl sm:text-7xl lg:text-8xl font-black tracking-[0.25em] text-[#102040] select-all leading-none">
+          {/* Balanced room code with neatly aligned copy button */}
+          <div className="my-1 flex flex-col sm:flex-row items-stretch justify-center gap-2.5 w-full max-w-lg mx-auto">
+            <div className="bg-[#FFCC00] border-4 border-[#102040] shadow-[3px_3px_0px_#102040] px-5 sm:px-8 py-2 sm:py-2.5 flex items-center justify-center flex-1">
+              <span className="font-mono text-3xl sm:text-4xl md:text-5xl font-black tracking-[0.25em] text-[#102040] select-all leading-none">
                 {room.code}
               </span>
             </div>
@@ -103,25 +103,25 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
               type="button"
               onClick={handleCopyCode}
               aria-label="Copy room code"
-              className="font-pixel text-xs sm:text-sm bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-5 py-4 border-4 border-[#102040] shadow-[5px_5px_0px_#102040] font-bold flex items-center justify-center gap-2 transition-transform active:translate-y-1 cursor-pointer select-none"
+              className="font-pixel text-xs sm:text-sm bg-[#FAF8F5] text-[#102040] hover:bg-[#FFCC00] px-4 py-2 sm:py-2.5 border-4 border-[#102040] shadow-[3px_3px_0px_#102040] font-bold flex items-center justify-center gap-2 transition-transform active:translate-y-0.5 cursor-pointer select-none shrink-0"
             >
               <span>{copied ? '✓ COPIED!' : '📋 COPY CODE'}</span>
             </button>
           </div>
 
-          <p className="font-mono text-xs sm:text-sm text-[#102040] font-semibold mt-1">
+          <p className="font-mono text-xs text-[#102040] font-semibold">
             Players navigate to <strong className="underline font-bold">/join</strong> on their phone, enter the code above, select their slot, and input their PIN.
           </p>
         </div>
 
         {/* Live Joined Tracker Bar */}
-        <div className="mt-4 pt-4 border-t-4 border-[#102040] flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-            <span className="font-pixel text-xs sm:text-sm text-[#102040] font-bold">
+        <div className="mt-2.5 pt-2.5 border-t-2 border-[#102040] flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-start">
+            <span className="font-pixel text-xs text-[#102040] font-bold">
               STATUS:
             </span>
             <span
-              className={`font-pixel text-xs sm:text-sm px-3.5 py-1.5 border-2 border-[#102040] shadow-[2px_2px_0px_#102040] ${
+              className={`font-pixel text-xs px-3 py-1 border-2 border-[#102040] shadow-[2px_2px_0px_#102040] ${
                 allJoined
                   ? 'bg-[#DCFCE7] text-[#166534]'
                   : joinedTeams.length > 0
@@ -135,7 +135,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
 
           <PixelButton
             variant={allJoined ? 'primary' : noTeamsJoined ? 'ghost' : 'secondary'}
-            size="lg"
+            size="md"
             onClick={() => setShowStartModal(true)}
             className="w-full sm:w-auto"
           >
@@ -145,30 +145,35 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
       </PixelCard>
 
       {/* Team Cards Grid with PINs and Connection Status */}
-      <PixelCard title="TEAM CONNECTIONS & SECRET PINS" headerBg="brick" padding="md">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <PixelCard
+        title="TEAM CONNECTIONS & SECRET PINS"
+        headerBg="brick"
+        padding="sm"
+        className="min-h-0 flex-1 flex flex-col"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[360px] lg:max-h-[330px] overflow-y-auto pr-1">
           {teams.map((team) => {
             const isConnected = team.claimed;
             return (
               <div
                 key={team.id}
                 className={`
-                  border-4 p-4 shadow-[4px_4px_0px_#102040] flex flex-col justify-between gap-3 min-h-[160px] transition-all
+                  border-3 p-2.5 sm:p-3 shadow-[3px_3px_0px_#102040] flex flex-col justify-between gap-2 transition-all
                   ${
                     isConnected
-                      ? 'bg-[#F0FDF4] border-[#16A34A] shadow-[4px_4px_0px_#166534]'
+                      ? 'bg-[#F0FDF4] border-[#16A34A] shadow-[3px_3px_0px_#166534]'
                       : 'bg-white border-[#102040]'
                   }
                 `}
               >
                 {/* Header: Slot & Connection Pill */}
-                <div className="flex items-center justify-between border-b-2 border-[#102040] pb-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between border-b-2 border-[#102040] pb-1.5">
+                  <div className="flex items-center gap-1.5">
                     <span
-                      className="w-4 h-4 border-2 border-[#102040] shadow-[1px_1px_0px_#102040]"
+                      className="w-3.5 h-3.5 border-2 border-[#102040] shadow-[1px_1px_0px_#102040]"
                       style={{ backgroundColor: team.color }}
                     />
-                    <span className="font-pixel text-xs text-[#102040] font-bold">
+                    <span className="font-pixel text-[11px] sm:text-xs text-[#102040] font-bold">
                       SLOT #{team.slot}
                     </span>
                   </div>
@@ -182,18 +187,18 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
 
                 {/* Team Name */}
                 <div>
-                  <h3 className="font-pixel text-sm text-[#102040] truncate mb-1">
+                  <h3 className="font-pixel text-xs sm:text-sm text-[#102040] truncate">
                     {team.name}
                   </h3>
                 </div>
 
                 {/* PIN and Release Action */}
-                <div className="bg-[#FAF8F5] border-2 border-[#102040] p-2.5 flex items-center justify-between">
+                <div className="bg-[#FAF8F5] border-2 border-[#102040] px-2.5 py-1.5 flex items-center justify-between">
                   <div>
-                    <span className="font-pixel text-[9px] text-[#102040] font-bold block uppercase">
+                    <span className="font-pixel text-[8px] text-[#102040] font-bold block uppercase">
                       SECRET PIN:
                     </span>
-                    <span className="font-mono font-extrabold text-xl text-[#102040] tracking-widest">
+                    <span className="font-mono font-extrabold text-base sm:text-lg text-[#102040] tracking-widest leading-tight">
                       {team.pin || '••••'}
                     </span>
                   </div>
@@ -203,7 +208,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
                       variant="danger"
                       size="sm"
                       onClick={() => setReleasingTeam(team)}
-                      className="text-[10px] min-h-[38px] py-1 px-3"
+                      className="text-[9px] min-h-[30px] py-0.5 px-2.5"
                       title="Disconnect this team's device"
                     >
                       RELEASE
@@ -273,7 +278,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
               size="md"
               onClick={() => setShowStartModal(false)}
             >
-              UNDERSTOOD
+              GOT IT / CLOSE
             </PixelButton>
           ) : (
             <>
@@ -309,23 +314,23 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ snapshot, onRefetch }) => 
         }
       >
         {noTeamsJoined ? (
-          <div className="flex flex-col items-center text-center gap-4 py-2">
-            <div className="w-14 h-14 bg-[#FEF2F2] border-3 border-[#102040] shadow-[3px_3px_0px_#102040] flex items-center justify-center text-2xl">
+          <div className="flex flex-col items-center text-center gap-3 py-1">
+            <div className="w-12 h-12 bg-[#FEF2F2] border-3 border-[#102040] shadow-[2px_2px_0px_#102040] flex items-center justify-center text-2xl shrink-0">
               🚫
             </div>
-            <div className="flex flex-col gap-2">
-              <h3 className="font-pixel text-sm sm:text-base text-[#991B1B]">
+            <div className="flex flex-col gap-1.5 w-full">
+              <h3 className="font-pixel text-xs sm:text-sm text-[#991B1B]">
                 0 / {teams.length} TEAMS CONNECTED
               </h3>
-              <p className="font-mono text-xs sm:text-sm leading-relaxed text-[#102040]">
+              <p className="font-mono text-xs leading-relaxed text-[#102040]">
                 Startupoly requires competing teams to connect their devices before starting the match.
               </p>
-              <div className="bg-[#FFFBEB] border-2 border-[#102040] p-3 text-xs text-[#92400E] font-mono text-left mt-1">
-                <p className="font-bold mb-1">How players connect:</p>
+              <div className="bg-[#FFFBEB] border-2 border-[#102040] p-2.5 text-xs text-[#92400E] font-mono text-left mt-0.5">
+                <p className="font-bold mb-1 font-pixel text-[10px] text-[#102040]">HOW PLAYERS CONNECT:</p>
                 <ol className="list-decimal pl-4 space-y-1">
                   <li>Navigate to <strong className="underline">/join</strong> on phone</li>
                   <li>Enter room code: <strong className="font-mono text-sm text-[#102040]">{room.code}</strong></li>
-                  <li>Select their team slot (1–{teams.length})</li>
+                  <li>Select team slot (1–{teams.length})</li>
                   <li>Enter their slot's secret 4-digit PIN</li>
                 </ol>
               </div>

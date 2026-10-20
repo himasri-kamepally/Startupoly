@@ -32,9 +32,9 @@ export const AdminRoomPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#5C94FC] flex flex-col justify-between">
+    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden bg-[#5C94FC] flex flex-col justify-between">
       {/* Top Navbar */}
-      <header className="bg-[#102040] text-white border-b-4 border-[#102040] px-4 py-3 flex items-center justify-between gap-3 shadow-[0_4px_0px_#102040] select-none">
+      <header className="bg-[#102040] text-white border-b-4 border-[#102040] px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-3 shadow-[0_4px_0px_#102040] select-none shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <Link
             to="/admin"
@@ -45,11 +45,11 @@ export const AdminRoomPage: React.FC = () => {
             <span>CONSOLE</span>
           </Link>
           <div className="border-l-2 border-white/20 pl-2 sm:pl-3 flex items-center gap-2 flex-wrap">
-            <div className="bg-[#FFCC00] text-[#102040] px-2.5 py-1 border-2 border-[#102040] shadow-[2px_2px_0px_rgba(0,0,0,0.4)] font-pixel text-xs font-bold tracking-wider">
+            <div className="bg-[#FFCC00] text-[#102040] px-2 py-0.5 sm:px-2.5 sm:py-1 border-2 border-[#102040] shadow-[2px_2px_0px_rgba(0,0,0,0.4)] font-pixel text-xs font-bold tracking-wider">
               ROOM {snapshot?.room.code || roomId?.slice(0, 6).toUpperCase()}
             </div>
             {snapshot && (
-              <span className="font-pixel text-[9px] sm:text-[10px] bg-[#3B82F6] text-white px-2 py-1 border border-white/30 uppercase tracking-wide">
+              <span className="font-pixel text-[9px] sm:text-[10px] bg-[#3B82F6] text-white px-2 py-0.5 sm:py-1 border border-white/30 uppercase tracking-wide">
                 {snapshot.room.status === 'CREATED'
                   ? '⚙ PRE-LOBBY SETUP'
                   : snapshot.room.status === 'LOBBY'
@@ -74,14 +74,14 @@ export const AdminRoomPage: React.FC = () => {
       </header>
 
       {/* Responsive width notice for small devices (< 1024px) */}
-      <div className="lg:hidden bg-[#FFCC00] text-[#102040] px-4 py-2 text-center border-b-4 border-[#102040] shadow-[0_2px_0px_#102040]">
-        <p className="font-pixel text-[11px] leading-relaxed">
-          💻 Use a laptop for the admin console. Full operations grid is optimized for screens ≥ 1024px.
+      <div className="lg:hidden bg-[#FFCC00] text-[#102040] px-3 py-1.5 text-center border-b-4 border-[#102040] shadow-[0_2px_0px_#102040] shrink-0">
+        <p className="font-pixel text-[10px] leading-relaxed">
+          📱 Phone view active. Scroll down to view team slots and PINs.
         </p>
       </div>
 
       {/* Main Room Lifecycle Body */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-4 md:p-5 flex flex-col gap-3 min-h-0 overflow-y-auto lg:overflow-visible">
         {status === 'loading' && (
           <div className="flex flex-col gap-4">
             <PixelCard title="LOADING TOURNAMENT ROOM..." headerBg="navy">

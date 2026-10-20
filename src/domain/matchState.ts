@@ -115,6 +115,31 @@ export function saveMatchState(state: PersistedMatchState): void {
   }
 }
 
+export function clearMatchState(roomId: string): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    window.localStorage.removeItem(getMatchStorageKey(roomId));
+  } catch (err) {
+    console.warn('Failed to remove match state from localStorage:', err);
+  }
+}
+
+export function clearAllLocalMatchStates(): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && (key.startsWith(STORAGE_PREFIX) || key === 'startupoly_guest_auth')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((k) => window.localStorage.removeItem(k));
+  } catch (err) {
+    console.warn('Failed to clear local match states:', err);
+  }
+}
+
 export function getNextActiveTeamId(
   currentId: string,
   turnOrder: string[],

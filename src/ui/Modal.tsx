@@ -50,7 +50,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-100"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-100"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -58,33 +58,33 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         ref={modalRef}
         className={`
-          w-full ${maxWidthStyles[maxWidth]} bg-[#FAF8F5]
+          w-full ${maxWidthStyles[maxWidth]} max-w-[calc(100vw-24px)] bg-[#FAF8F5]
           border-4 border-[#102040] shadow-[6px_6px_0px_#102040]
-          flex flex-col max-h-[90vh] overflow-hidden
+          flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden my-auto
         `}
       >
         {/* Modal Header */}
-        <div className="bg-[#102040] text-white px-4 py-3 flex items-center justify-between border-b-4 border-[#102040]">
-          <h2 className="font-pixel text-xs sm:text-sm uppercase tracking-wider truncate pr-2">
+        <div className="bg-[#102040] text-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between border-b-4 border-[#102040] shrink-0 gap-2">
+          <h2 className="font-pixel text-xs sm:text-sm uppercase tracking-wider break-words leading-snug pr-1 flex-1">
             {title}
           </h2>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="w-8 h-8 flex items-center justify-center bg-[#D32F2F] text-white font-pixel text-xs border-2 border-white hover:bg-[#B71C1C] cursor-pointer active:translate-y-0.5"
+            className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 flex items-center justify-center bg-[#D32F2F] text-white font-pixel text-xs border-2 border-white hover:bg-[#B71C1C] cursor-pointer active:translate-y-0.5"
           >
             ✕
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 font-sans text-sm text-[#102040]">
+        <div className="p-3 sm:p-5 overflow-y-auto min-h-0 flex-1 font-sans text-sm text-[#102040]">
           {children}
         </div>
 
         {/* Modal Footer */}
         {footer && (
-          <div className="bg-[#EAE5D9] px-4 py-3 border-t-4 border-[#102040] flex items-center justify-end gap-3">
+          <div className="bg-[#EAE5D9] px-3 sm:px-4 py-2.5 sm:py-3 border-t-4 border-[#102040] flex items-center justify-end gap-3 shrink-0">
             {footer}
           </div>
         )}

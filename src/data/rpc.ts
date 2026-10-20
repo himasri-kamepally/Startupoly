@@ -177,6 +177,20 @@ export async function rpcAdminExtendGame(room_id: string, additional_seconds = 6
   }>('admin_extend_game', { p_room_id: room_id, p_additional_seconds: additional_seconds });
 }
 
+export async function rpcAdminClearMatchData() {
+  return mutate<{
+    success: boolean;
+    backup_saved: boolean;
+    deleted_rooms: number;
+    deleted_teams: number;
+    deleted_events: number;
+    deleted_results: number;
+    deleted_claims: number;
+    deleted_businesses: number;
+    deleted_attempts: number;
+  }>('admin_clear_match_data' as any, {});
+}
+
 // 4. Admin Edits
 export async function rpcAdminSetTeamValues(params: {
   team_id: string;
